@@ -1,0 +1,46 @@
+TITLE:: NodeProxyGui2
+summary:: Providing a modern alternative to the NodeProxy gui
+categories:: Undocumented classes
+related:: Classes/SomeRelatedClass, Reference/SomeRelatedStuff, etc.
+
+DESCRIPTION::
+A slightly longer description of this package
+
+CLASSMETHODS::
+
+METHOD:: new
+(describe method here)
+
+ARGUMENT:: arga
+(describe argument here)
+
+ARGUMENT:: argb
+(describe argument here)
+
+ARGUMENT:: argc
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+
+INSTANCEMETHODS::
+
+METHOD:: init
+(describe method here)
+
+ARGUMENT:: arga
+(describe argument here)
+
+ARGUMENT:: argb
+(describe argument here)
+
+ARGUMENT:: argc
+(describe argument here)
+
+returns:: (describe returnvalue here)
+
+EXAMPLES::
+
+code::
+(some example code)
+::
