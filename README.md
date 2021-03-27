@@ -1,5 +1,7 @@
 # NodeProxyGui2
 
+![ndefgui2 in action](ndefgui2.gif)
+
 An alternative to SuperCollider's built-in (and partly broken) Ndef.gui method.
 
 Usage is very simple. Instead of calling `gui` on a nodeproxy object you simply call `gui2`:

@@ -54,7 +54,7 @@ NodeProxyGui2 {
 		};
 
 		updateRoutine.play;
-		window.onClose = { updateRoutine.stop; "Stopping update clock".postln }
+		window.onClose = { updateRoutine.stop;}
 	}
 
 	makeInfoSection{
@@ -283,9 +283,9 @@ NodeProxyGui2 {
 
 	updateButtons{
 		if(ndef.isPlaying, {
-			play.value_(0);
-		}, {
 			play.value_(1);
+		}, {
+			play.value_(0);
 		})
 	}
 
