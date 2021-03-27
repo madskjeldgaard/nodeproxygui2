@@ -1,7 +1,8 @@
 NodeProxyGui2 {
 	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, scrambleParams, volslider, vollabel, volvalueBox;
 
-	// var sliderDict;
+	var updateRoutine;
+	var sliderDict;
 
 	var fontSize;
 	var headerFontSize;
@@ -17,15 +18,17 @@ NodeProxyGui2 {
 	var paramNames;
 
 	// this is a normal constructor method
-	*new { | nodeproxy |
-		^super.new.init(nodeproxy);
+	*new { | nodeproxy, updateRate = 0.1|
+		^super.new.init(nodeproxy, updateRate);
 	}
 
-	init { | nodeproxy|
+	init { | nodeproxy, updateRate|
+
+
 		ndef = nodeproxy;
 		this.initFonts();
 		params = IdentityDictionary.new();
-		// sliderDict = IdentityDictionary.new();
+		sliderDict = IdentityDictionary.new();
 
 		window = Window.new(ndef.key);
 		// Get parameter names and make sliders
@@ -38,8 +41,20 @@ NodeProxyGui2 {
 		header = StaticText.new().string_(ndef.key).font_(headerFont);
 		window.layout = VLayout([header, s: 1],[transport, s:1], info, *sliders);
 
+		this.makeUpdateRoutine(updateRate);
 		window.front;
 
+	}
+
+	makeUpdateRoutine{|updateRate|
+		updateRoutine = r{ 
+			loop{
+				updateRate.wait; defer{ this.updateAll() } 
+			}
+		};
+
+		updateRoutine.play;
+		window.onClose = { updateRoutine.stop; "Stopping update clock".postln }
 	}
 
 	makeInfoSection{
@@ -152,9 +167,8 @@ NodeProxyGui2 {
 			["scramble"]
 		])
 		.action_({|obj|
-			ndef.randomizeAllParams(0.0, 1.0);
-			this.sync;
-		})
+			this.scramble()
+					})
 		.font_(buttonFont);
 
 		// Create layout
@@ -163,6 +177,12 @@ NodeProxyGui2 {
 
 		)
 
+	}
+
+	scramble{
+		sliderDict.keysValuesDo{|name, dict|
+			dict[\slider].valueAction_(rrand(0.0,1.0))
+		}
 	}
 
 	makeSliders{
@@ -197,7 +217,7 @@ NodeProxyGui2 {
 			var sliderLayout = HLayout([label, s: 1],  [valueBox, s:1], [slider, s: 4]);
 
 			// This is used to be able to fetch the sliders later when they need to be updated
-			// sliderDict.put(pName, slider);
+			sliderDict.put(pName, (slider: slider, numBox: valueBox));
 
 			sliders = sliders.add(sliderLayout);
 		};
@@ -244,21 +264,46 @@ NodeProxyGui2 {
 			var spec = Spec.specs.at(paramname);
 			spec = if(spec.isNil, { [0.0,1.0].asSpec }, { spec });
 
+			// @TODO this should remove no longer used params (and sliders)
 			params.put(paramname, spec)
 		};
 
-		this.makeSliders();
-		window.refresh();
+		// this.makeSliders();
+		// window.refresh();
 		// this.updateSliders();
 
 	}
 
-	// updateSliders{
-	// 	paramNames.do{|paramname|
-	// 		var ndefval = ndef.get(paramname);
-	// 		sliderDict[paramname].value(ndefval)
-	// 	}
-	// }
+	updateAll{
+		this.sync();
+		this.updateSliders();
+		this.updateLabels();
+		this.updateButtons();
+	}
+
+	updateButtons{
+		if(ndef.isPlaying, {
+			play.value_(0);
+		}, {
+			play.value_(1);
+		})
+	}
+
+	updateLabels{
+		numChannels.string_(ndef.numChannels);
+		ndefrate.string_(ndef.rate);
+		fade.value_(ndef.fadeTime);
+	}
+
+	updateSliders{
+		params.keysValuesDo{|paramname, spec|
+			var ndefval = ndef.get(paramname);
+			sliderDict[paramname][\slider].value_(spec.unmap(ndefval));
+			sliderDict[paramname][\numBox].value_(ndefval);
+		}
+	}
+
+
 }
 
 + NodeProxy {
