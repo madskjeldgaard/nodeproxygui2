@@ -58,7 +58,6 @@ NodeProxyGui2 {
 
 		// Keep alive even though user presses cmd-period
 		CmdPeriod.add({
-			"Keeping it alive".postln;
 			updateRoutine.play;
 		})
 	}
