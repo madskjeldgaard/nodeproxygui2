@@ -1,3 +1,10 @@
+/*
+
+TODO:
+- Seperate state in to one dict
+- Every time the update routine polls the values of ndef, it should compare them to the state and only if it is new update it
+
+*/
 NodeProxyGui2 {
 	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, scrambleParams, volslider, vollabel, volvalueBox;
 
@@ -20,7 +27,7 @@ NodeProxyGui2 {
 	var numDigits = 4;
 
 	// this is a normal constructor method
-	*new { | nodeproxy, updateRate = 0.1|
+	*new { | nodeproxy, updateRate = 0.5|
 		^super.new.init(nodeproxy, updateRate);
 	}
 
@@ -73,17 +80,37 @@ NodeProxyGui2 {
 		.string_("channels:")
 		.font_(infolabelFont);
 
-		numChannels = StaticText.new()
-		.string_(ndef.numChannels)
+		numChannels = NumberBox.new()
+		.value_(ndef.numChannels)
+		.decimals_(0)
+		.action_({|obj|
+			ndef.mold(obj.value.asInteger, ndef.rate)
+		})
 		.font_(valueFont);
+
+		// numChannels = StaticText.new()
+		// .string_(ndef.numChannels)
+		// .font_(valueFont);
 
 		rateLabel = StaticText.new()
 		.string_("rate:")
 		.font_(infolabelFont);
 
-		ndefrate = StaticText.new()
-		.string_(ndef.rate)
-		.font_(valueFont);
+		// ndefrate = StaticText.new()
+		// .string_(ndef.rate)
+		// .font_(valueFont);
+
+		ndefrate = Button.new()
+		.states_([
+			["audio"],
+			["control"]
+		])
+		.action_({|obj|
+			var index = obj.value;
+			var newrate = obj.states[index][0].asSymbol;
+			ndef.mold(ndef.numChannels, newrate)
+		})
+		.font_(infolabelFont);
 
 		/*
 		* Fade
@@ -288,6 +315,7 @@ NodeProxyGui2 {
 
 	}
 
+	// @TODO: Check if values are new before updating them in elements
 	updateAll{
 		this.sync();
 		this.updateSliders();
@@ -304,8 +332,14 @@ NodeProxyGui2 {
 	}
 
 	updateLabels{
-		numChannels.string_(ndef.numChannels);
-		ndefrate.string_(ndef.rate);
+		numChannels.value_(ndef.numChannels);
+
+		if(ndef.rate == \audio, {
+			ndefrate.value_(0)
+		}, {
+			ndefrate.value_(1)
+		});
+
 		fade.value_(ndef.fadeTime);
 	}
 
