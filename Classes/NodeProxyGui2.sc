@@ -54,7 +54,13 @@ NodeProxyGui2 {
 		};
 
 		updateRoutine.play;
-		window.onClose = { updateRoutine.stop;}
+		window.onClose = { updateRoutine.stop;};
+
+		// Keep alive even though user presses cmd-period
+		CmdPeriod.add({
+			"Keeping it alive".postln;
+			updateRoutine.play;
+		})
 	}
 
 	makeInfoSection{
