@@ -17,6 +17,8 @@ NodeProxyGui2 {
 	var params;
 	var paramNames;
 
+	var numDigits = 4;
+
 	// this is a normal constructor method
 	*new { | nodeproxy, updateRate = 0.1|
 		^super.new.init(nodeproxy, updateRate);
@@ -38,8 +40,11 @@ NodeProxyGui2 {
 		this.makeTransportSection();
 		this.makeInfoSection();
 
-		header = StaticText.new().string_(ndef.key).font_(headerFont);
-		window.layout = VLayout([header, s: 1],[transport, s:1], info, *sliders);
+		window.layout = VLayout(
+			[info, s: 1],
+			[transport, s:1], 
+			*sliders
+		);
 
 		this.makeUpdateRoutine(updateRate);
 		window.front;
@@ -90,7 +95,7 @@ NodeProxyGui2 {
 		fade = NumberBox.new()
 		.step_(0.01)
 		.clipLo_(0.0)
-		.decimals_(2)
+		.decimals_(numDigits)
 		.scroll_step_(0.01)
 		// .clipHi_(100.0)
 		.value_(ndef.fadeTime)
@@ -102,10 +107,12 @@ NodeProxyGui2 {
 		.step_(0.1)
 		.font_(valueFont);
 
-		info = HLayout(
-			[fadeLabel, s: 1], [fade, s: 1], 
-			[numChannelsLabel, s:1], [numChannels, s: 1],
-			[rateLabel, s: 1],  [ndefrate, s:1]
+		header = StaticText.new().string_(ndef.key).font_(headerFont);
+		info = VLayout(
+			header,
+			HLayout([numChannelsLabel, s:1], [numChannels, s: 1, a: \left]),
+			HLayout([rateLabel, s: 1],  [ndefrate, s:1, a: \left]),
+			HLayout([fadeLabel, s: 1], [fade, s:1, a: \left]), 
 		);
 
 	}
@@ -198,6 +205,7 @@ NodeProxyGui2 {
 
 			// Slider
 			var slider = Slider.new()
+			.step_(spec.step)
 			.orientation_(\horizontal)
 			.value_(ndef.get(pName))
 			.action_({|obj|
@@ -215,6 +223,7 @@ NodeProxyGui2 {
 
 			// Value box
 			var valueBox = NumberBox.new()
+			.decimals_(numDigits)
 			.value_(ndef.get(pName))
 			.font_(valueFont);
 
@@ -243,6 +252,7 @@ NodeProxyGui2 {
 
 		// Value box
 		volvalueBox = NumberBox.new()
+		.decimals_(numDigits)
 		.value_(ndef.vol)
 		.font_(valueFont);
 
@@ -252,7 +262,7 @@ NodeProxyGui2 {
 
 	initFonts { 
 		fontSize = 14;
-		headerFontSize = fontSize + (fontSize / 3 * 2);
+		headerFontSize = fontSize;
 		headerFont = Font.sansSerif(headerFontSize, bold: true, italic: false);
 		labelFont = Font.monospace(fontSize, bold: false, italic: false);
 		infolabelFont = Font.monospace(fontSize, bold: false, italic: false);
@@ -266,8 +276,7 @@ NodeProxyGui2 {
 
 		// Populate param dict
 		paramNames.do{|paramname| 
-			var spec = Spec.specs.at(paramname);
-			spec = if(spec.isNil, { [0.0,1.0].asSpec }, { spec });
+			var spec = Spec.specs.at(paramname) ?? ndef.specs.at(paramname) ??[0.0,1.0].asSpec  ;
 
 			// @TODO this should remove no longer used params (and sliders)
 			params.put(paramname, spec)
