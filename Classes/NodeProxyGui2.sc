@@ -2,7 +2,6 @@
 
 TODO:
 - Seperate state in to one dict
-- Every time the update routine polls the values of ndef, it should compare them to the state and only if it is new update it
 
 */
 NodeProxyGui2 {
@@ -31,7 +30,6 @@ NodeProxyGui2 {
 	}
 
 	init { | nodeproxy, updateRate |
-		var updateRoutine, restartUpdateFunc;
 
 		ndef = nodeproxy;
 		this.initFonts();
@@ -51,26 +49,8 @@ NodeProxyGui2 {
 			*sliders
 		);
 
-		restartUpdateFunc = { updateRoutine = this.makeUpdateRoutine(updateRate) };
-		restartUpdateFunc.value;
-
-		// Keep alive even though user presses cmd-period
-		CmdPeriod.add(restartUpdateFunc);
-
-		window.onClose = {
-			updateRoutine.stop;
-			CmdPeriod.remove(restartUpdateFunc);
-		};
 		window.front;
 
-	}
-
-	makeUpdateRoutine { | updateRate |
-		^Routine({
-			loop{
-				updateRate.wait; this.updateAll()
-			}
-		}).play(AppClock)
 	}
 
 	makeInfoSection {
@@ -264,6 +244,24 @@ NodeProxyGui2 {
 	}
 
 	makeSliders {
+		var slidersFunc = { | obj ...args |
+			var key, val, spec;
+			switch(args[0],
+				\set, {
+					key = args[1][0];
+					if(params[key].notNil, {
+						val = args[1][1];
+						spec = params[key].value;
+						sliderDict[key][\numBox].value_(spec.constrain(val));
+						sliderDict[key][\slider].value_(spec.unmap(val));
+					});
+				}
+			);
+		};
+		ndef.addDependant(slidersFunc);
+		window.onClose = {
+			ndef.removeDependant(slidersFunc);
+		};
 
 		sliders = [];
 
@@ -275,7 +273,7 @@ NodeProxyGui2 {
 			var slider = Slider.new()
 			.step_(spec.step)
 			.orientation_(\horizontal)
-			.value_(paramVal)
+			.value_(spec.unmap(paramVal))
 			.action_({ | obj |
 				var sliderVal = obj.value;
 				var mappedVal = spec.map(sliderVal);
@@ -298,7 +296,7 @@ NodeProxyGui2 {
 				ndef.set(pName, val);
 			})
 			.decimals_(4)
-			.value_(paramVal)
+			.value_(spec.constrain(paramVal))
 			.font_(valueFont);
 
 			// Slider Layout
@@ -362,31 +360,7 @@ NodeProxyGui2 {
 			// @TODO this should remove no longer used params (and sliders)
 			params.put(paramname, spec)
 		};
-
-		// this.makeSliders();
-		// window.refresh();
-		// this.updateSliders();
-
 	}
-
-	// @TODO: Check if values are new before updating them in elements
-	updateAll {
-		this.sync();
-		this.updateSliders();
-	}
-
-	updateSliders {
-		params.keysValuesDo{ | paramname, spec |
-			var ndefval = ndef.get(paramname);
-			// TODO: What to do about Buffers and such?
-			if(ndefval.isKindOf(SimpleNumber), {
-				sliderDict[paramname][\slider].value_(spec.unmap(ndefval));
-				sliderDict[paramname][\numBox].value_(ndefval);
-			});
-		}
-	}
-
-
 }
 
 + NodeProxy {
