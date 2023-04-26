@@ -251,6 +251,12 @@ NodeProxyGui2 {
 
 			// Value box
 			var valueBox = NumberBox.new()
+            .action_({|obj|
+                var val = obj.value;
+                var mappedVal = spec.unmap(val);
+                slider.value_(mappedVal);
+                ndef.set(pName, val);
+            })
 			.decimals_(numDigits)
 			.value_(paramVal)
 			.font_(valueFont);
