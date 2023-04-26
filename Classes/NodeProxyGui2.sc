@@ -8,7 +8,7 @@ TODO:
 NodeProxyGui2 {
 	classvar <>numDigits = 4;
 
-	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, scrambleParams, volslider, vollabel, volvalueBox;
+	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, scrambleParams, volslider, vollabel, volvalueBox;
 
 	var sliderDict;
 
@@ -178,6 +178,15 @@ NodeProxyGui2 {
 		})
 		.font_(buttonFont);
 
+        send = Button.new()
+        .states_([
+            ["send"]
+        ])
+        .action_({|obj|
+            ndef.send
+        })
+        .font_(buttonFont);
+
 		scope = Button.new()
 		.states_([
 			["scope"]
@@ -212,7 +221,7 @@ NodeProxyGui2 {
 
 		// Create layout
 		transport = HLayout(
-			play, clear, free, scope, scrambleParams
+			play, clear, free, scope, send, scrambleParams
 
 		)
 
