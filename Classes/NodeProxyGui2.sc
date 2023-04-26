@@ -144,29 +144,28 @@ NodeProxyGui2 {
 	}
 
 	makeTransportSection {
+		var playFunc = { | obj ...args |
+			switch(args[0],
+				\play, {play.value_(1)},
+				\stop, {play.value_(0)}
+			);
+		};
 		play = Button.new()
-		.states_([
+		.states_(#[
 			["play"],
 			["stop"]
 		])
+		.font_(buttonFont)
 		.action_({ | obj |
-			var val = obj.value;
-
-			if(val == 1, {
+			if(obj.value == 1, {
 				ndef.play;
 			}, {
 				ndef.stop
 			})
-
 		})
-		.font_(buttonFont);
-
-		// Get current play state
-		ndef.isPlaying.if({
-			play.value_(1)
-		}, {
-			play.value_(0)
-		});
+		.value_(ndef.isMonitoring.binaryValue)
+		.onClose_({ ndef.removeDependant(playFunc) });
+		ndef.addDependant(playFunc);
 
 		clear = Button.new()
 		.states_([
@@ -177,14 +176,14 @@ NodeProxyGui2 {
 		})
 		.font_(buttonFont);
 
-        send = Button.new()
-        .states_([
-            ["send"]
-        ])
-        .action_({|obj|
-            ndef.send
-        })
-        .font_(buttonFont);
+		send = Button.new()
+		.states_([
+			["send"]
+		])
+		.action_({|obj|
+			ndef.send
+		})
+		.font_(buttonFont);
 
 		scope = Button.new()
 		.states_([
@@ -343,15 +342,6 @@ NodeProxyGui2 {
 		this.sync();
 		this.updateSliders();
 		this.updateLabels();
-		this.updateButtons();
-	}
-
-	updateButtons {
-		if(ndef.isPlaying, {
-			play.value_(1);
-		}, {
-			play.value_(0);
-		})
 	}
 
 	updateLabels {
