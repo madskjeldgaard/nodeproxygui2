@@ -41,15 +41,14 @@ NodeProxyGui2 {
 
 		window = Window.new(ndef.key);
 		// Get parameter names and make sliders
-		this.sync(); 
+		this.sync();
 		this.makeSliders();
-
 		this.makeTransportSection();
 		this.makeInfoSection();
 
 		window.layout = VLayout(
 			[info, s: 1],
-			[transport, s:1], 
+			[transport, s:1],
 			*sliders
 		);
 
@@ -59,9 +58,9 @@ NodeProxyGui2 {
 	}
 
 	makeUpdateRoutine{|updateRate|
-		updateRoutine = r{ 
+		updateRoutine = r{
 			loop{
-				updateRate.wait; defer{ this.updateAll() } 
+				updateRate.wait; defer{ this.updateAll() }
 			}
 		};
 
@@ -82,7 +81,7 @@ NodeProxyGui2 {
 
 		numChannels = NumberBox.new()
 		.value_(ndef.numChannels)
-		.decimals_(0)
+		// .decimals_(0)
 		.action_({|obj|
 			ndef.mold(obj.value.asInteger, ndef.rate)
 		})
@@ -139,7 +138,7 @@ NodeProxyGui2 {
 			header,
 			HLayout([numChannelsLabel, s:1], [numChannels, s: 1, a: \left]),
 			HLayout([rateLabel, s: 1],  [ndefrate, s:1, a: \left]),
-			HLayout([fadeLabel, s: 1], [fade, s:1, a: \left]), 
+			HLayout([fadeLabel, s: 1], [fade, s:1, a: \left]),
 		);
 
 	}
@@ -147,7 +146,7 @@ NodeProxyGui2 {
 	makeTransportSection{
 		play = Button.new()
 		.states_([
-			["play"], 
+			["play"],
 			["stop"]
 		])
 		.action_({|obj|
@@ -231,10 +230,12 @@ NodeProxyGui2 {
 		params.keysValuesDo{|pName, spec|
 
 			// Slider
+            // TODO: What about Buffer etc?
+            var paramVal = if(ndef.get(pName).isKindOf(SimpleNumber), {ndef.get(pName)}, {0});
 			var slider = Slider.new()
 			.step_(spec.step)
 			.orientation_(\horizontal)
-			.value_(ndef.get(pName))
+			.value_(paramVal)
 			.action_({|obj|
 				var sliderVal = obj.value;
 				var mappedVal = spec.map(sliderVal);
@@ -251,7 +252,7 @@ NodeProxyGui2 {
 			// Value box
 			var valueBox = NumberBox.new()
 			.decimals_(numDigits)
-			.value_(ndef.get(pName))
+			.value_(paramVal)
 			.font_(valueFont);
 
 			// Slider Layout
@@ -287,7 +288,7 @@ NodeProxyGui2 {
 		sliders = [HLayout([vollabel, s: 1],  [volvalueBox, s:1], [volslider, s: 4]) ]++ sliders;
 	}
 
-	initFonts { 
+	initFonts {
 		fontSize = 14;
 		headerFontSize = fontSize;
 		headerFont = Font.sansSerif(headerFontSize, bold: true, italic: false);
@@ -302,8 +303,9 @@ NodeProxyGui2 {
 		paramNames = ndef.controlKeys;
 
 		// Populate param dict
-		paramNames.do{|paramname| 
-			var spec = Spec.specs.at(paramname) ?? ndef.specs.at(paramname) ??[0.0,1.0].asSpec  ;
+		paramNames.do{|paramname|
+			var spec = Spec.specs.at(paramname) ?? ndef.specs.at(paramname) ?? [0.0,1.0].asSpec;
+            // "Spec for paramname %: %".format(paramname, spec).postln;
 
 			// @TODO this should remove no longer used params (and sliders)
 			params.put(paramname, spec)
@@ -344,11 +346,14 @@ NodeProxyGui2 {
 	}
 
 	updateSliders{
-		params.keysValuesDo{|paramname, spec|
-			var ndefval = ndef.get(paramname);
-			sliderDict[paramname][\slider].value_(spec.unmap(ndefval));
-			sliderDict[paramname][\numBox].value_(ndefval);
-		}
+        params.keysValuesDo{|paramname, spec|
+            var ndefval = ndef.get(paramname);
+            // TODO: What to do about Buffers and such?
+            if(ndefval.isKindOf(SimpleNumber), {
+                sliderDict[paramname][\slider].value_(spec.unmap(ndefval));
+                sliderDict[paramname][\numBox].value_(ndefval);
+            });
+        }
 	}
 
 
@@ -372,5 +377,3 @@ NodeProxyGui2 {
 		NodeProxyGui2.new(this);
 	}
 }
-
-
