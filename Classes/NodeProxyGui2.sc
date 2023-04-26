@@ -70,19 +70,21 @@ NodeProxyGui2 {
 				\set, {
 					switch(args[1][0],
 						\fadeTime, {
-							fade.value = ndef.fadeTime;
+							{fade.value = ndef.fadeTime}.defer;
 						},
 					);
 				},
 				\bus, {
-					numChannels.value = args[1].numChannels;
+					{numChannels.value = args[1].numChannels}.defer;
 				},
 				\rebuild, {
-					if(ndef.rate == \audio, {
-						ndefrate.value = 0;
-					}, {
-						ndefrate.value = 1;
-					});
+					{
+						if(ndef.rate == \audio, {
+							ndefrate.value = 0;
+						}, {
+							ndefrate.value = 1;
+						});
+					}.defer;
 				}
 			);
 		};
@@ -159,8 +161,8 @@ NodeProxyGui2 {
 	makeTransportSection {
 		var playFunc = { | obj ...args |
 			switch(args[0],
-				\play, {play.value_(1)},
-				\stop, {play.value_(0)}
+				\play, {{play.value_(1)}.defer},
+				\stop, {{play.value_(0)}.defer}
 			);
 		};
 		play = Button.new()
@@ -263,8 +265,10 @@ NodeProxyGui2 {
 					if(params[key].notNil, {
 						val = args[1][1];
 						spec = params[key].value;
-						sliderDict[key][\numBox].value_(spec.constrain(val));
-						sliderDict[key][\slider].value_(spec.unmap(val));
+						{
+							sliderDict[key][\numBox].value_(spec.constrain(val));
+							sliderDict[key][\slider].value_(spec.unmap(val));
+						}.defer;
 					});
 				}
 			);
