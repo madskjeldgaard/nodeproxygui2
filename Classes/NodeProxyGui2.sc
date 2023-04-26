@@ -7,7 +7,7 @@ TODO:
 */
 NodeProxyGui2 {
 
-	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, randomizeParams, volslider, vollabel, volvalueBox;
+	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, randomizeParams, volslider, vollabel, volvalueBox, defaultsButton;
 
 	var sliderDict;
 
@@ -217,10 +217,19 @@ NodeProxyGui2 {
 		})
 		.font_(buttonFont);
 
+        randomizeParams = Button.new()
+        .states_([
+            ["defaults"]
+        ])
+        .action_({ | obj |
+            ndef.setDefaults()
+        })
+        .font_(buttonFont);
+
+
 		// Create layout
 		transport = HLayout(
-			play, clear, free, scope, send, randomizeParams
-
+			play, clear, free, scope, send, randomizeParams, defaultsButton
 		)
 
 	}
@@ -372,9 +381,9 @@ NodeProxyGui2 {
 }
 
 + NodeProxy {
-	randomizeAllParamsMapped{ | randmin = 0.0, randmax = 1.0 |
+    prFilteredParams{
         var ignoreParams = [\numChannels, \vol, \numOuts, \buffer, \feedback, \gain];
-		var params = this.controlKeys.asArray.reject({ | paramName |
+        var params = this.controlKeys.asArray.reject({ | paramName |
             // Ignore this parameter in the randomization if it is in the ignoreParams list
             var predicate = ignoreParams.includes(paramName.asSymbol) or: {
                 // Does the parameter name end with one of the ignored parameters? If so, ignore it as well
@@ -396,6 +405,11 @@ NodeProxyGui2 {
 
             predicate
         });
+        ^params
+    }
+
+	randomizeAllParamsMapped{ | randmin = 0.0, randmax = 1.0 |
+        var params = this.prFilteredParams();
 
 		params.do{ | param |
 			var val = rrand(randmin, randmax);
@@ -405,6 +419,16 @@ NodeProxyGui2 {
 			this.set(param, val)
 		}
 	}
+
+    setDefaults{
+        var params = this.prFilteredParams();
+
+        params.do{ | param |
+			var spec = Spec.specs.at(param);
+			spec = if(spec.isNil, { [0.0,1.0].asSpec }, { spec });
+			this.set(param, spec.default)
+		}
+    }
 
 	gui2{
 		NodeProxyGui2.new(this);
