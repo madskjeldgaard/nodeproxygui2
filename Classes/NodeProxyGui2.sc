@@ -37,8 +37,19 @@ NodeProxyGui2 {
 		sliderDict = IdentityDictionary.new();
 
 		window = Window.new(ndef.key);
+
 		// Get parameter names and make sliders
-		this.sync();
+		paramNames = ndef.controlKeys;
+
+		// Populate param dict
+		paramNames.do{ | paramname |
+			var spec = Spec.specs.at(paramname) ?? ndef.specs.at(paramname) ?? #[0.0, 1.0].asSpec;
+			// "Spec for paramname %: %".format(paramname, spec).postln;
+
+			// @TODO this should remove no longer used params (and sliders)
+			params.put(paramname, spec)
+		};
+
 		this.makeSliders();
 		this.makeTransportSection();
 		this.makeInfoSection();
@@ -348,19 +359,6 @@ NodeProxyGui2 {
 		buttonFont = Font.monospace(fontSize, bold: false, italic: false);
 	}
 
-	// Get latest info from NodeProxy and store in the gui object
-	sync {
-		paramNames = ndef.controlKeys;
-
-		// Populate param dict
-		paramNames.do{ | paramname |
-			var spec = Spec.specs.at(paramname) ?? ndef.specs.at(paramname) ?? [0.0,1.0].asSpec;
-			// "Spec for paramname %: %".format(paramname, spec).postln;
-
-			// @TODO this should remove no longer used params (and sliders)
-			params.put(paramname, spec)
-		};
-	}
 }
 
 + NodeProxy {
