@@ -6,7 +6,6 @@ TODO:
 
 */
 NodeProxyGui2 {
-	classvar <>numDigits = 4;
 
 	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, randomizeParams, volslider, vollabel, volvalueBox;
 
@@ -122,7 +121,7 @@ NodeProxyGui2 {
 		fade = NumberBox.new()
 		.step_(0.01)
 		.clipLo_(0.0)
-		.decimals_(numDigits)
+		.decimals_(4)
 		.scroll_step_(0.01)
 		// .clipHi_(100.0)
 		.value_(ndef.fadeTime)
@@ -267,7 +266,7 @@ NodeProxyGui2 {
 				slider.value_(mappedVal);
 				ndef.set(pName, val);
 			})
-			.decimals_(numDigits)
+			.decimals_(4)
 			.value_(paramVal)
 			.font_(valueFont);
 
@@ -297,7 +296,7 @@ NodeProxyGui2 {
 
 		// Value box
 		volvalueBox = NumberBox.new()
-		.decimals_(numDigits)
+		.decimals_(4)
 		.action_({ | obj |
 			var val = obj.value;
 			volslider.value_(val);
