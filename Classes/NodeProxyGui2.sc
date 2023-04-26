@@ -287,6 +287,11 @@ NodeProxyGui2 {
 		// Value box
 		volvalueBox = NumberBox.new()
 		.decimals_(numDigits)
+        .action_( { |obj|
+            var val = obj.value;
+            volslider.value_(val);
+            ndef.vol_(val);
+        })
 		.value_(ndef.vol)
 		.font_(valueFont);
 
