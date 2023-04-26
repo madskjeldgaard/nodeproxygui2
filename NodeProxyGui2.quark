@@ -1,5 +1,5 @@
 (
-  name: "NodeProxyGui2",
+  name: "nodeproxygui2",
   summary: "Providing a modern alternative to the NodeProxy gui",
   version: "0.001",
   schelp: "NodeProxyGui2.schelp",
