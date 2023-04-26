@@ -7,7 +7,7 @@ TODO:
 */
 NodeProxyGui2 {
 
-	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, randomizeParams, volslider, vollabel, volvalueBox;
+	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeLabel, header, randomizeParams, volslider, vollabel, volvalueBox;
 
 	var sliderDict;
 
@@ -74,6 +74,31 @@ NodeProxyGui2 {
 	}
 
 	makeInfoSection {
+		var infoFunc = { | obj ...args |
+			switch(args[0],
+				\set, {
+					switch(args[1][0],
+						\fadeTime, {
+							fade.value = ndef.fadeTime;
+						},
+					);
+				},
+				\bus, {
+					numChannels.value = args[1].numChannels;
+				},
+				\rebuild, {
+					if(ndef.rate == \audio, {
+						ndefrate.value = 0;
+					}, {
+						ndefrate.value = 1;
+					});
+				}
+			);
+		};
+		ndef.addDependant(infoFunc);
+		window.onClose = {
+			ndef.removeDependant(infoFunc);
+		};
 
 		numChannelsLabel = StaticText.new()
 		.string_("channels:")
@@ -111,9 +136,6 @@ NodeProxyGui2 {
 		})
 		.font_(infolabelFont);
 
-		/*
-		* Fade
-		*/
 		fadeLabel = StaticText.new()
 		.string_("fade:")
 		.font_(infolabelFont);
@@ -341,19 +363,6 @@ NodeProxyGui2 {
 	updateAll {
 		this.sync();
 		this.updateSliders();
-		this.updateLabels();
-	}
-
-	updateLabels {
-		numChannels.value_(ndef.numChannels);
-
-		if(ndef.rate == \audio, {
-			ndefrate.value_(0)
-		}, {
-			ndefrate.value_(1)
-		});
-
-		fade.value_(ndef.fadeTime);
 	}
 
 	updateSliders {
