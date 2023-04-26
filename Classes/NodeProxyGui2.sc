@@ -7,7 +7,7 @@ TODO:
 */
 NodeProxyGui2 {
 
-	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeLabel, header, randomizeParams, volslider, vollabel, volvalueBox;
+	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeLabel, header, randomizeParams, volslider, vollabel, volvalueBox, defaultsButton;
 
 	var sliderDict;
 
@@ -239,18 +239,28 @@ NodeProxyGui2 {
 		})
 		.font_(buttonFont);
 
+        randomizeParams = Button.new()
+        .states_([
+            ["defaults"]
+        ])
+        .action_({ | obj |
+            ndef.setDefaults()
+        })
+        .font_(buttonFont);
+
+
 		// Create layout
 		transport = HLayout(
-			play, clear, free, scope, send, randomizeParams
-
+			play, clear, free, scope, send, randomizeParams, defaultsButton
 		)
 
 	}
 
 	randomize {
-		sliderDict.keysValuesDo{ | name, dict |
-			dict[\slider].valueAction_(rrand(0.0,1.0))
-		}
+        ndef.randomizeAllParamsMapped(0.0, 1.0);
+		// sliderDict.keysValuesDo{ | name, dict |
+		// 	dict[\slider].valueAction_(rrand(0.0,1.0))
+		// }
 	}
 
 	makeSliders {
@@ -380,18 +390,54 @@ NodeProxyGui2 {
 }
 
 + NodeProxy {
+    prFilteredParams{
+        var ignoreParams = [\numChannels, \vol, \numOuts, \buffer, \feedback, \gain];
+        var params = this.controlKeys.asArray.reject({ | paramName |
+            // Ignore this parameter in the randomization if it is in the ignoreParams list
+            var predicate = ignoreParams.includes(paramName.asSymbol) or: {
+                // Does the parameter name end with one of the ignored parameters? If so, ignore it as well
+
+                ignoreParams.any({|ignored|
+                    paramName.asString.contains(ignored.asString)
+                }) or: ignoreParams.any({|ignored|
+                    // Check for same name but with first letter capitalized
+                    ignored = ignored.asString;
+                    ignored = ignored[0].toUpper ++ ignored[1..];
+                    paramName.asString.contains(ignored.asString)
+                });
+
+            };
+
+            if(predicate, {
+                "Rejecting %".format(paramName).postln;
+            });
+
+            predicate
+        });
+        ^params
+    }
+
 	randomizeAllParamsMapped{ | randmin = 0.0, randmax = 1.0 |
-		var nd = this;
-		var params = nd.controlKeys;
+        var params = this.prFilteredParams();
 
 		params.do{ | param |
 			var val = rrand(randmin, randmax);
 			var spec = Spec.specs.at(param);
 			spec = if(spec.isNil, { [0.0,1.0].asSpec }, { spec });
 			val = spec.map(val);
-			nd.set(param, val)
+			this.set(param, val)
 		}
 	}
+
+    setDefaults{
+        var params = this.prFilteredParams();
+
+        params.do{ | param |
+			var spec = Spec.specs.at(param);
+			spec = if(spec.isNil, { [0.0,1.0].asSpec }, { spec });
+			this.set(param, spec.default)
+		}
+    }
 
 	gui2{
 		NodeProxyGui2.new(this);
