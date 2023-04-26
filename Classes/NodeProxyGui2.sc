@@ -227,7 +227,7 @@ NodeProxyGui2 {
 
 		sliders = [];
 
-		params.keysValuesDo{|pName, spec|
+		params.sortedKeysValuesDo{|pName, spec|
 
 			// Slider
             // TODO: What about Buffer etc?
@@ -263,6 +263,7 @@ NodeProxyGui2 {
 
 			sliders = sliders.add(sliderLayout);
 		};
+
 
 		volslider = Slider.new()
 		.orientation_(\horizontal)
