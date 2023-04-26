@@ -8,7 +8,7 @@ TODO:
 NodeProxyGui2 {
 	classvar <>numDigits = 4;
 
-	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, scrambleParams, volslider, vollabel, volvalueBox;
+	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, randomizeParams, volslider, vollabel, volvalueBox;
 
 	var sliderDict;
 
@@ -210,24 +210,24 @@ NodeProxyGui2 {
 		})
 		.font_(buttonFont);
 
-		scrambleParams = Button.new()
+		randomizeParams = Button.new()
 		.states_([
-			["scramble"]
+			["randomize"]
 		])
 		.action_({ | obj |
-			this.scramble()
+			this.randomize()
 		})
 		.font_(buttonFont);
 
 		// Create layout
 		transport = HLayout(
-			play, clear, free, scope, send, scrambleParams
+			play, clear, free, scope, send, randomizeParams
 
 		)
 
 	}
 
-	scramble {
+	randomize {
 		sliderDict.keysValuesDo{ | name, dict |
 			dict[\slider].valueAction_(rrand(0.0,1.0))
 		}
