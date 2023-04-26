@@ -6,9 +6,10 @@ TODO:
 
 */
 NodeProxyGui2 {
+	classvar <>numDigits = 4;
+
 	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, scrambleParams, volslider, vollabel, volvalueBox;
 
-	var updateRoutine;
 	var sliderDict;
 
 	var fontSize;
@@ -24,7 +25,6 @@ NodeProxyGui2 {
 	var params;
 	var paramNames;
 
-	var numDigits = 4;
 
 	// this is a normal constructor method
 	*new { | nodeproxy, updateRate = 0.5|
@@ -32,7 +32,7 @@ NodeProxyGui2 {
 	}
 
 	init { | nodeproxy, updateRate|
-
+		var updateRoutine, restartUpdateFunc;
 
 		ndef = nodeproxy;
 		this.initFonts();
@@ -52,25 +52,26 @@ NodeProxyGui2 {
 			*sliders
 		);
 
-		this.makeUpdateRoutine(updateRate);
+		restartUpdateFunc = { updateRoutine = this.makeUpdateRoutine(updateRate) };
+		restartUpdateFunc.value;
+
+		// Keep alive even though user presses cmd-period
+		CmdPeriod.add(restartUpdateFunc);
+
+		window.onClose = {
+			updateRoutine.stop;
+			CmdPeriod.remove(restartUpdateFunc);
+		};
 		window.front;
 
 	}
 
 	makeUpdateRoutine{|updateRate|
-		updateRoutine = r{
+		^Routine({
 			loop{
-				updateRate.wait; defer{ this.updateAll() }
+				updateRate.wait; this.updateAll()
 			}
-		};
-
-		updateRoutine.play;
-		window.onClose = { updateRoutine.stop;};
-
-		// Keep alive even though user presses cmd-period
-		CmdPeriod.add({
-			updateRoutine.play;
-		})
+		}).play(AppClock)
 	}
 
 	makeInfoSection{
@@ -375,7 +376,7 @@ NodeProxyGui2 {
 		var nd = this;
 		var params = nd.controlKeys;
 
-		params.do{ |param|
+		params.do{ |param|
 			var val = rrand(randmin, randmax);
 			var spec = Spec.specs.at(param);
 			spec = if(spec.isNil, { [0.0,1.0].asSpec }, { spec });
