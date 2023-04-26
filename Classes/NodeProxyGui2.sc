@@ -6,6 +6,8 @@ TODO:
 
 */
 NodeProxyGui2 {
+	classvar <>numDigits = 4;
+
 	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, free, numChannels, numChannelsLabel, name, scope, fade, fadeKnob, fadeLabel, header, scrambleParams, volslider, vollabel, volvalueBox;
 
 	var updateRoutine;
@@ -24,7 +26,6 @@ NodeProxyGui2 {
 	var params;
 	var paramNames;
 
-	var numDigits = 4;
 
 	// this is a normal constructor method
 	*new { | nodeproxy, updateRate = 0.5|
@@ -364,7 +365,7 @@ NodeProxyGui2 {
 		var nd = this;
 		var params = nd.controlKeys;
 
-		params.do{ |param|
+		params.do{ |param|
 			var val = rrand(randmin, randmax);
 			var spec = Spec.specs.at(param);
 			spec = if(spec.isNil, { [0.0,1.0].asSpec }, { spec });
