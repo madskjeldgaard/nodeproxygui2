@@ -373,7 +373,7 @@ NodeProxyGui2 {
 
 + NodeProxy {
 	randomizeAllParamsMapped{ | randmin = 0.0, randmax = 1.0 |
-        var ignoreParams = [\fadeTime, \rate, \numChannels, \vol, \numOuts, \buffer, \feedback, \gain];
+        var ignoreParams = [\numChannels, \vol, \numOuts, \buffer, \feedback, \gain];
 		var params = this.controlKeys.asArray.reject({ | paramName |
             // Ignore this parameter in the randomization if it is in the ignoreParams list
             var predicate = ignoreParams.includes(paramName.asSymbol) or: {
