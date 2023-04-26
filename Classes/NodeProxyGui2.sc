@@ -27,11 +27,11 @@ NodeProxyGui2 {
 
 
 	// this is a normal constructor method
-	*new { | nodeproxy, updateRate = 0.5|
+	*new { | nodeproxy, updateRate = 0.5 |
 		^super.new.init(nodeproxy, updateRate);
 	}
 
-	init { | nodeproxy, updateRate|
+	init { | nodeproxy, updateRate |
 		var updateRoutine, restartUpdateFunc;
 
 		ndef = nodeproxy;
@@ -66,7 +66,7 @@ NodeProxyGui2 {
 
 	}
 
-	makeUpdateRoutine{|updateRate|
+	makeUpdateRoutine { | updateRate |
 		^Routine({
 			loop{
 				updateRate.wait; this.updateAll()
@@ -74,7 +74,7 @@ NodeProxyGui2 {
 		}).play(AppClock)
 	}
 
-	makeInfoSection{
+	makeInfoSection {
 
 		numChannelsLabel = StaticText.new()
 		.string_("channels:")
@@ -83,7 +83,7 @@ NodeProxyGui2 {
 		numChannels = NumberBox.new()
 		.value_(ndef.numChannels)
 		// .decimals_(0)
-		.action_({|obj|
+		.action_({ | obj |
 			ndef.mold(obj.value.asInteger, ndef.rate)
 		})
 		.font_(valueFont);
@@ -105,7 +105,7 @@ NodeProxyGui2 {
 			["audio"],
 			["control"]
 		])
-		.action_({|obj|
+		.action_({ | obj |
 			var index = obj.value;
 			var newrate = obj.states[index][0].asSymbol;
 			ndef.mold(ndef.numChannels, newrate)
@@ -126,7 +126,7 @@ NodeProxyGui2 {
 		.scroll_step_(0.01)
 		// .clipHi_(100.0)
 		.value_(ndef.fadeTime)
-		.action_({|obj|
+		.action_({ | obj |
 			var val = obj.value;
 			ndef.fadeTime = val;
 		})
@@ -138,22 +138,22 @@ NodeProxyGui2 {
 		info = VLayout(
 			header,
 			HLayout([numChannelsLabel, s:1], [numChannels, s: 1, a: \left]),
-			HLayout([rateLabel, s: 1],  [ndefrate, s:1, a: \left]),
+			HLayout([rateLabel, s: 1], [ndefrate, s:1, a: \left]),
 			HLayout([fadeLabel, s: 1], [fade, s:1, a: \left]),
 		);
 
 	}
 
-	makeTransportSection{
+	makeTransportSection {
 		play = Button.new()
 		.states_([
 			["play"],
 			["stop"]
 		])
-		.action_({|obj|
+		.action_({ | obj |
 			var val = obj.value;
 
-			if(val==1, {
+			if(val == 1, {
 				ndef.play;
 			}, {
 				ndef.stop
@@ -173,7 +173,7 @@ NodeProxyGui2 {
 		.states_([
 			["clear"]
 		])
-		.action_({|obj|
+		.action_({ | obj |
 			ndef.clear
 		})
 		.font_(buttonFont);
@@ -191,7 +191,7 @@ NodeProxyGui2 {
 		.states_([
 			["scope"]
 		])
-		.action_({|obj|
+		.action_({ | obj |
 			ndef.scope
 		})
 		.font_(buttonFont);
@@ -200,10 +200,10 @@ NodeProxyGui2 {
 		.states_([
 			["free"]
 		])
-		.action_({|obj|
+		.action_({ | obj |
 			var val = obj.value;
 
-			// if(val==1, {
+			// if(val == 1, {
 			ndef.free;
 			// })
 
@@ -214,9 +214,9 @@ NodeProxyGui2 {
 		.states_([
 			["scramble"]
 		])
-		.action_({|obj|
+		.action_({ | obj |
 			this.scramble()
-					})
+		})
 		.font_(buttonFont);
 
 		// Create layout
@@ -227,26 +227,26 @@ NodeProxyGui2 {
 
 	}
 
-	scramble{
-		sliderDict.keysValuesDo{|name, dict|
+	scramble {
+		sliderDict.keysValuesDo{ | name, dict |
 			dict[\slider].valueAction_(rrand(0.0,1.0))
 		}
 	}
 
-	makeSliders{
+	makeSliders {
 
 		sliders = [];
 
-		params.sortedKeysValuesDo{|pName, spec|
+		params.sortedKeysValuesDo{ | pName, spec |
 
 			// Slider
-            // TODO: What about Buffer etc?
-            var paramVal = if(ndef.get(pName).isKindOf(SimpleNumber), {ndef.get(pName)}, {0});
+			// TODO: What about Buffer etc?
+			var paramVal = if(ndef.get(pName).isKindOf(SimpleNumber), {ndef.get(pName)}, {0});
 			var slider = Slider.new()
 			.step_(spec.step)
 			.orientation_(\horizontal)
 			.value_(paramVal)
-			.action_({|obj|
+			.action_({ | obj |
 				var sliderVal = obj.value;
 				var mappedVal = spec.map(sliderVal);
 				valueBox.value = mappedVal;
@@ -261,18 +261,18 @@ NodeProxyGui2 {
 
 			// Value box
 			var valueBox = NumberBox.new()
-            .action_({|obj|
-                var val = obj.value;
-                var mappedVal = spec.unmap(val);
-                slider.value_(mappedVal);
-                ndef.set(pName, val);
-            })
+			.action_({ | obj |
+				var val = obj.value;
+				var mappedVal = spec.unmap(val);
+				slider.value_(mappedVal);
+				ndef.set(pName, val);
+			})
 			.decimals_(numDigits)
 			.value_(paramVal)
 			.font_(valueFont);
 
 			// Slider Layout
-			var sliderLayout = HLayout([label, s: 1],  [valueBox, s:1], [slider, s: 4]);
+			var sliderLayout = HLayout([label, s: 1], [valueBox, s:1], [slider, s: 4]);
 
 			// This is used to be able to fetch the sliders later when they need to be updated
 			sliderDict.put(pName, (slider: slider, numBox: valueBox));
@@ -284,7 +284,7 @@ NodeProxyGui2 {
 		volslider = Slider.new()
 		.orientation_(\horizontal)
 		.value_(ndef.vol)
-		.action_({|obj|
+		.action_({ | obj |
 			var sliderVal = obj.value;
 			ndef.vol_(sliderVal);
 			volvalueBox.value_(sliderVal);
@@ -298,16 +298,16 @@ NodeProxyGui2 {
 		// Value box
 		volvalueBox = NumberBox.new()
 		.decimals_(numDigits)
-        .action_( { |obj|
-            var val = obj.value;
-            volslider.value_(val);
-            ndef.vol_(val);
-        })
+		.action_({ | obj |
+			var val = obj.value;
+			volslider.value_(val);
+			ndef.vol_(val);
+		})
 		.value_(ndef.vol)
 		.font_(valueFont);
 
 		// Put volume slider at the top
-		sliders = [HLayout([vollabel, s: 1],  [volvalueBox, s:1], [volslider, s: 4]) ]++ sliders;
+		sliders = [HLayout([vollabel, s: 1], [volvalueBox, s:1], [volslider, s: 4]) ]++ sliders;
 	}
 
 	initFonts {
@@ -321,13 +321,13 @@ NodeProxyGui2 {
 	}
 
 	// Get latest info from NodeProxy and store in the gui object
-	sync{
+	sync {
 		paramNames = ndef.controlKeys;
 
 		// Populate param dict
-		paramNames.do{|paramname|
+		paramNames.do{ | paramname |
 			var spec = Spec.specs.at(paramname) ?? ndef.specs.at(paramname) ?? [0.0,1.0].asSpec;
-            // "Spec for paramname %: %".format(paramname, spec).postln;
+			// "Spec for paramname %: %".format(paramname, spec).postln;
 
 			// @TODO this should remove no longer used params (and sliders)
 			params.put(paramname, spec)
@@ -340,14 +340,14 @@ NodeProxyGui2 {
 	}
 
 	// @TODO: Check if values are new before updating them in elements
-	updateAll{
+	updateAll {
 		this.sync();
 		this.updateSliders();
 		this.updateLabels();
 		this.updateButtons();
 	}
 
-	updateButtons{
+	updateButtons {
 		if(ndef.isPlaying, {
 			play.value_(1);
 		}, {
@@ -355,7 +355,7 @@ NodeProxyGui2 {
 		})
 	}
 
-	updateLabels{
+	updateLabels {
 		numChannels.value_(ndef.numChannels);
 
 		if(ndef.rate == \audio, {
@@ -367,26 +367,26 @@ NodeProxyGui2 {
 		fade.value_(ndef.fadeTime);
 	}
 
-	updateSliders{
-        params.keysValuesDo{|paramname, spec|
-            var ndefval = ndef.get(paramname);
-            // TODO: What to do about Buffers and such?
-            if(ndefval.isKindOf(SimpleNumber), {
-                sliderDict[paramname][\slider].value_(spec.unmap(ndefval));
-                sliderDict[paramname][\numBox].value_(ndefval);
-            });
-        }
+	updateSliders {
+		params.keysValuesDo{ | paramname, spec |
+			var ndefval = ndef.get(paramname);
+			// TODO: What to do about Buffers and such?
+			if(ndefval.isKindOf(SimpleNumber), {
+				sliderDict[paramname][\slider].value_(spec.unmap(ndefval));
+				sliderDict[paramname][\numBox].value_(ndefval);
+			});
+		}
 	}
 
 
 }
 
 + NodeProxy {
-	randomizeAllParamsMapped{|randmin=0.0, randmax=1.0|
+	randomizeAllParamsMapped{ | randmin = 0.0, randmax = 1.0 |
 		var nd = this;
 		var params = nd.controlKeys;
 
-		params.do{ |param|
+		params.do{ | param |
 			var val = rrand(randmin, randmax);
 			var spec = Spec.specs.at(param);
 			spec = if(spec.isNil, { [0.0,1.0].asSpec }, { spec });
