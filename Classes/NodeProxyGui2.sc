@@ -1,12 +1,6 @@
-/*
-
-TODO:
-- Seperate state in to one dict
-
-*/
 NodeProxyGui2 {
 	classvar <>ignoreParams;
-    const <defaultIgnoreParams = #[\numChannels, \vol, \numOuts, \buffer];
+	const <defaultIgnoreParams = #[\numChannels, \vol, \numOuts, \buffer];
 
 	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeLabel, header, randomizeParams, volslider, vollabel, volvalueBox, defaultsButton;
 
@@ -70,27 +64,25 @@ NodeProxyGui2 {
 	makeInfoSection {
 		var infoFunc = { | obj ...args |
 			switch(args[0],
-				\set, {
-					switch(args[1][0],
-						\fadeTime, {
-							{fade.value = ndef.fadeTime}.defer;
-						},
-					);
+			\set, {
+				switch(args[1][0],
+				\fadeTime, {
+					{fade.value = ndef.fadeTime}.defer;
 				},
-				\bus, {
-					{numChannels.value = args[1].numChannels}.defer;
-				},
-				\rebuild, {
-					{
-						if(ndef.rate == \audio, {
-							ndefrate.value = 0;
-						}, {
-							ndefrate.value = 1;
-						});
-					}.defer;
-				}
 			);
-		};
+		},
+		\bus, {
+			{numChannels.value = args[1].numChannels}.defer;
+		},
+		\rebuild, {
+			{
+				if(ndef.rate == \audio, {
+					ndefrate.value = 0;
+				}, {
+					ndefrate.value = 1;
+				});
+			}.defer;
+		})};
 		ndef.addDependant(infoFunc);
 		window.onClose = {
 			ndef.removeDependant(infoFunc);
@@ -158,16 +150,14 @@ NodeProxyGui2 {
 			HLayout([rateLabel, s: 1], [ndefrate, s:1, a: \left]),
 			HLayout([fadeLabel, s: 1], [fade, s:1, a: \left]),
 		);
-
 	}
 
 	makeTransportSection {
 		var playFunc = { | obj ...args |
 			switch(args[0],
-				\play, {{play.value_(1)}.defer},
-				\stop, {{play.value_(0)}.defer}
-			);
-		};
+			\play, {{play.value_(1)}.defer},
+			\stop, {{play.value_(0)}.defer}
+		)};
 		play = Button.new()
 		.states_(#[
 			["play"],
@@ -235,25 +225,24 @@ NodeProxyGui2 {
 		})
 		.font_(buttonFont);
 
-        defaultsButton = Button.new()
-        .states_([
-            ["defaults"]
-        ])
-        .action_({ | obj |
-            ndef.setDefaults()
-        })
-        .font_(buttonFont);
+		defaultsButton = Button.new()
+		.states_([
+			["defaults"]
+		])
+		.action_({ | obj |
+			ndef.setDefaults()
+		})
+		.font_(buttonFont);
 
 
 		// Create layout
 		transport = HLayout(
 			play, clear, free, scope, send, randomizeParams, defaultsButton
 		)
-
 	}
 
 	randomize {
-        ndef.randomizeAllParamsMapped(0.0, 1.0);
+		ndef.randomizeAllParamsMapped(0.0, 1.0);
 		// sliderDict.keysValuesDo{ | name, dict |
 		// 	dict[\slider].valueAction_(rrand(0.0,1.0))
 		// }
@@ -263,18 +252,17 @@ NodeProxyGui2 {
 		var slidersFunc = { | obj ...args |
 			var key, val, spec;
 			switch(args[0],
-				\set, {
-					key = args[1][0];
-					if(params[key].notNil, {
-						val = args[1][1];
-						spec = params[key].value;
-						{
-							sliderDict[key][\numBox].value_(spec.constrain(val));
-							sliderDict[key][\slider].value_(spec.unmap(val));
-						}.defer;
-					});
-				}
-			);
+			\set, {
+				key = args[1][0];
+				if(params[key].notNil, {
+					val = args[1][1];
+					spec = params[key].value;
+					{
+						sliderDict[key][\numBox].value_(spec.constrain(val));
+						sliderDict[key][\slider].value_(spec.unmap(val));
+					}.defer;
+				});
+			})
 		};
 		ndef.addDependant(slidersFunc);
 		window.onClose = {
@@ -285,49 +273,48 @@ NodeProxyGui2 {
 
 		params.sortedKeysValuesDo{ | pName, spec |
 
-            // Only make slider for this parameter, if it is a number
-            ndef.get(pName).isKindOf(SimpleNumber).if{
+			// Only make slider for this parameter, if it is a number
+			ndef.get(pName).isKindOf(SimpleNumber).if{
 
-                // Slider
-                var paramVal = ndef.get(pName);
-                var slider = Slider.new()
-                .step_(spec.step)
-                .orientation_(\horizontal)
-                .value_(spec.unmap(paramVal))
-                .action_({ | obj |
-                    var sliderVal = obj.value;
-                    var mappedVal = spec.map(sliderVal);
-                    valueBox.value = mappedVal;
-                    ndef.set(pName, mappedVal);
-                });
+				// Slider
+				var paramVal = ndef.get(pName);
+				var slider = Slider.new()
+				// .step_(spec.step)
+				.orientation_(\horizontal)
+				.value_(spec.unmap(paramVal))
+				.action_({ | obj |
+					var sliderVal = obj.value;
+					var mappedVal = spec.map(sliderVal);
+					valueBox.value = mappedVal;
+					ndef.set(pName, mappedVal);
+				});
 
-                // Label
-                var label = StaticText.new
-                .string_(pName)
-                .font_(labelFont);
+				// Label
+				var label = StaticText.new
+				.string_(pName)
+				.font_(labelFont);
 
+				// Value box
+				var valueBox = NumberBox.new()
+				.action_({ | obj |
+					var val = obj.value;
+					var mappedVal = spec.unmap(val);
+					slider.value_(mappedVal);
+					ndef.set(pName, val);
+				})
+				.decimals_(4)
+				.value_(spec.constrain(paramVal))
+				.font_(valueFont);
 
-                // Value box
-                var valueBox = NumberBox.new()
-                .action_({ | obj |
-                    var val = obj.value;
-                    var mappedVal = spec.unmap(val);
-                    slider.value_(mappedVal);
-                    ndef.set(pName, val);
-                })
-                .decimals_(4)
-                .value_(spec.constrain(paramVal))
-                .font_(valueFont);
+				// Slider Layout
+				var sliderLayout = HLayout([label, s: 1], [valueBox, s:1], [slider, s: 4]);
 
-                // Slider Layout
-                var sliderLayout = HLayout([label, s: 1], [valueBox, s:1], [slider, s: 4]);
+				// This is used to be able to fetch the sliders later when they need to be updated
+				sliderDict.put(pName, (slider: slider, numBox: valueBox));
 
-                // This is used to be able to fetch the sliders later when they need to be updated
-                sliderDict.put(pName, (slider: slider, numBox: valueBox));
+				sliders = sliders.add(sliderLayout);
 
-                sliders = sliders.add(sliderLayout);
-
-            }
+			}
 		};
 
 
