@@ -384,10 +384,6 @@ NodeProxyGui2 {
 
             };
 
-            if(predicate, {
-                "Rejecting %".format(paramName).postln;
-            });
-
             predicate
         });
         ^params
