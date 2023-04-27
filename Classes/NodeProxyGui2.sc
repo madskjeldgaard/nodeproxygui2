@@ -232,7 +232,7 @@ NodeProxyGui2 {
 		})
 		.font_(buttonFont);
 
-        randomizeParams = Button.new()
+        defaultsButton = Button.new()
         .states_([
             ["defaults"]
         ])
