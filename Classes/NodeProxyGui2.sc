@@ -5,6 +5,8 @@ TODO:
 
 */
 NodeProxyGui2 {
+	classvar <>ignoreParams;
+    const <defaultIgnoreParams = #[\numChannels, \vol, \numOuts, \buffer];
 
 	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeLabel, header, randomizeParams, volslider, vollabel, volvalueBox, defaultsButton;
 
@@ -31,6 +33,7 @@ NodeProxyGui2 {
 
 	init { | nodeproxy, updateRate |
 
+		ignoreParams = Set.newFrom(defaultIgnoreParams);
 		ndef = nodeproxy;
 		this.initFonts();
 		params = IdentityDictionary.new();

@@ -42,5 +42,15 @@ returns:: (describe returnvalue here)
 EXAMPLES::
 
 code::
-(some example code)
+(
+Ndef(\yiyi, {|freq=100, amp=0.5, pan=0| 
+	Pan2.ar(SinOsc.ar(freq), pos: pan, level: amp)
+});
+)
+
+Ndef(\yiyi).gui2;
+
+// dont randomize ignored parameters
+NodeProxyGui2.ignoreParams.add(\amp);
+NodeProxyGui2.ignoreParams.remove(\amp);
 ::

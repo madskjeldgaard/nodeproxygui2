@@ -1,17 +1,7 @@
-// The only purpose of this class is to allow the user to set which parameter names to ignore in the randomizer
-NodeProxyGuiIgnoreParams{
-    classvar <>params;
-
-    *initClass{
-        params = params ? [\numChannels, \vol, \numOuts, \buffer, \feedback, \gain];
-    }
-
-}
-
 + NodeProxy {
-    prFilteredParams{
-        var ignoreParams = NodeProxyGuiIgnoreParams.params;
-        var params = this.controlKeys.asArray.reject({ | paramName |
+ 	prFilteredParams{
+		var ignoreParams = NodeProxyGui2.ignoreParams;
+		var params = this.controlKeys.asArray.reject({ | paramName |
             // Ignore this parameter in the randomization if it is in the ignoreParams list
             var predicate = ignoreParams.includes(paramName.asSymbol) or: {
                 // Does the parameter name end with one of the ignored parameters? If so, ignore it as well
