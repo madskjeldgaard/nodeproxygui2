@@ -282,45 +282,49 @@ NodeProxyGui2 {
 
 		params.sortedKeysValuesDo{ | pName, spec |
 
-			// Slider
-			// TODO: What about Buffer etc?
-			var paramVal = if(ndef.get(pName).isKindOf(SimpleNumber), {ndef.get(pName)}, {0});
-			var slider = Slider.new()
-			.step_(spec.step)
-			.orientation_(\horizontal)
-			.value_(spec.unmap(paramVal))
-			.action_({ | obj |
-				var sliderVal = obj.value;
-				var mappedVal = spec.map(sliderVal);
-				valueBox.value = mappedVal;
-				ndef.set(pName, mappedVal);
-			});
+            // Only make slider for this parameter, if it is a number
+            ndef.get(pName).isKindOf(SimpleNumber).if{
 
-			// Label
-			var label = StaticText.new
-			.string_(pName)
-			.font_(labelFont);
+                // Slider
+                var paramVal = ndef.get(pName);
+                var slider = Slider.new()
+                .step_(spec.step)
+                .orientation_(\horizontal)
+                .value_(spec.unmap(paramVal))
+                .action_({ | obj |
+                    var sliderVal = obj.value;
+                    var mappedVal = spec.map(sliderVal);
+                    valueBox.value = mappedVal;
+                    ndef.set(pName, mappedVal);
+                });
+
+                // Label
+                var label = StaticText.new
+                .string_(pName)
+                .font_(labelFont);
 
 
-			// Value box
-			var valueBox = NumberBox.new()
-			.action_({ | obj |
-				var val = obj.value;
-				var mappedVal = spec.unmap(val);
-				slider.value_(mappedVal);
-				ndef.set(pName, val);
-			})
-			.decimals_(4)
-			.value_(spec.constrain(paramVal))
-			.font_(valueFont);
+                // Value box
+                var valueBox = NumberBox.new()
+                .action_({ | obj |
+                    var val = obj.value;
+                    var mappedVal = spec.unmap(val);
+                    slider.value_(mappedVal);
+                    ndef.set(pName, val);
+                })
+                .decimals_(4)
+                .value_(spec.constrain(paramVal))
+                .font_(valueFont);
 
-			// Slider Layout
-			var sliderLayout = HLayout([label, s: 1], [valueBox, s:1], [slider, s: 4]);
+                // Slider Layout
+                var sliderLayout = HLayout([label, s: 1], [valueBox, s:1], [slider, s: 4]);
 
-			// This is used to be able to fetch the sliders later when they need to be updated
-			sliderDict.put(pName, (slider: slider, numBox: valueBox));
+                // This is used to be able to fetch the sliders later when they need to be updated
+                sliderDict.put(pName, (slider: slider, numBox: valueBox));
 
-			sliders = sliders.add(sliderLayout);
+                sliders = sliders.add(sliderLayout);
+
+            }
 		};
 
 
