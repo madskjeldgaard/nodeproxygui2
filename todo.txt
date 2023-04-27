@@ -1,0 +1,15 @@
+# TODO
+
+* Rework ignoreParams -> global/local ignores (look up Ndef.all)
+* Add local ignoreParam toggle to gui
+* Add skin/palette selector
+* Better scroll on NumberBox functionality
+* NumberBox: clip values (ex. volume can easily be set to -123)
+
+## Add standard gui functionality
+* Drag and drop values between `NumberBoxes`
+* Drag and drop NodeProxies to NumberBoxes internally and externally between guis,
+
+## Notes
+* indentation
+* 'clear' and 'free'.
