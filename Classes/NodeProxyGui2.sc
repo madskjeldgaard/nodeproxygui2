@@ -129,18 +129,15 @@ NodeProxyGui2 {
 		.font_(infolabelFont);
 
 		fade = NumberBox.new()
-		.step_(0.01)
 		.clipLo_(0.0)
 		.decimals_(4)
-		.scroll_step_(0.01)
-		// .clipHi_(100.0)
+		.scroll_step_(0.1) // mouse
+		.step_(0.1)        // keys
 		.value_(ndef.fadeTime)
 		.action_({ | obj |
 			var val = obj.value;
 			ndef.fadeTime = val;
 		})
-		.increment(0.01)
-		.step_(0.1)
 		.font_(valueFont);
 
 		header = StaticText.new().string_(ndef.key).font_(headerFont);
@@ -317,7 +314,6 @@ NodeProxyGui2 {
 			}
 		};
 
-
 		volslider = Slider.new()
 		.orientation_(\horizontal)
 		.value_(ndef.vol)
@@ -337,6 +333,8 @@ NodeProxyGui2 {
 		.decimals_(4)
 		.action_({ | obj |
 			var val = obj.value;
+            val = val.clip(0.0,1.0);
+            obj.value = val;
 			volslider.value_(val);
 			ndef.vol_(val);
 		})
