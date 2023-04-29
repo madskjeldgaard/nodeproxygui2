@@ -40,8 +40,8 @@ NodeProxyGui2 {
 
 		// Populate param dict
 		paramNames.do{ | paramname |
-			var spec = Spec.specs.at(paramname) ?? ndef.specs.at(paramname) ?? #[0.0, 1.0].asSpec;
-			// "Spec for paramname %: %".format(paramname, spec).postln;
+			var spec = (Spec.specs.at(paramname) ?? {ndef.specs.at(paramname)}).asSpec;
+			//"Spec for paramname %: %".format(paramname, spec).postln;
 
 			// @TODO this should remove no longer used params (and sliders)
 			params.put(paramname, spec)
@@ -64,24 +64,18 @@ NodeProxyGui2 {
 	makeInfoSection {
 		var infoFunc = { | obj ...args |
 			switch(args[0],
-			\set, {
-				switch(args[1][0],
-				\fadeTime, {
-					{fade.value = ndef.fadeTime}.defer;
+				\set, {
+					switch(args[1][0],
+						\fadeTime, {
+							{fade.value = ndef.fadeTime}.defer;
+						},
+					);
 				},
-			);
-		},
-		\bus, {
-			{numChannels.value = args[1].numChannels}.defer;
-		},
-		\rebuild, {
-			{
-				if(ndef.rate == \audio, {
-					ndefrate.value = 0;
-				}, {
-					ndefrate.value = 1;
-				});
-			}.defer;
+				\bus, {
+					{numChannels.value = args[1].numChannels}.defer;
+				},
+				\rebuild, {
+					{ndefrate.value = if(ndef.rate == \audio, 0, 1)}.defer;
 		})};
 		ndef.addDependant(infoFunc);
 		window.onClose = {
@@ -113,7 +107,7 @@ NodeProxyGui2 {
 		// .font_(valueFont);
 
 		ndefrate = Button.new()
-		.states_([
+		.states_(#[
 			["audio"],
 			["control"]
 		])
@@ -135,8 +129,7 @@ NodeProxyGui2 {
 		.step_(0.1)        // keys
 		.value_(ndef.fadeTime)
 		.action_({ | obj |
-			var val = obj.value;
-			ndef.fadeTime = val;
+			ndef.fadeTime = obj.value;
 		})
 		.font_(valueFont);
 
@@ -152,8 +145,8 @@ NodeProxyGui2 {
 	makeTransportSection {
 		var playFunc = { | obj ...args |
 			switch(args[0],
-			\play, {{play.value_(1)}.defer},
-			\stop, {{play.value_(0)}.defer}
+				\play, {{play.value_(1)}.defer},
+				\stop, {{play.value_(0)}.defer}
 		)};
 		play = Button.new()
 		.states_(#[
@@ -173,7 +166,7 @@ NodeProxyGui2 {
 		ndef.addDependant(playFunc);
 
 		clear = Button.new()
-		.states_([
+		.states_(#[
 			["clear"]
 		])
 		.action_({ | obj |
@@ -182,7 +175,7 @@ NodeProxyGui2 {
 		.font_(buttonFont);
 
 		send = Button.new()
-		.states_([
+		.states_(#[
 			["send"]
 		])
 		.action_({|obj|
@@ -191,7 +184,7 @@ NodeProxyGui2 {
 		.font_(buttonFont);
 
 		scope = Button.new()
-		.states_([
+		.states_(#[
 			["scope"]
 		])
 		.action_({ | obj |
@@ -200,13 +193,12 @@ NodeProxyGui2 {
 		.font_(buttonFont);
 
 		free = Button.new()
-		.states_([
+		.states_(#[
 			["free"]
 		])
 		.action_({ | obj |
-			var val = obj.value;
 
-			// if(val == 1, {
+			// if(obj.value == 1, {
 			ndef.free;
 			// })
 
@@ -214,7 +206,7 @@ NodeProxyGui2 {
 		.font_(buttonFont);
 
 		randomizeParams = Button.new()
-		.states_([
+		.states_(#[
 			["randomize"]
 		])
 		.action_({ | obj |
@@ -223,7 +215,7 @@ NodeProxyGui2 {
 		.font_(buttonFont);
 
 		defaultsButton = Button.new()
-		.states_([
+		.states_(#[
 			["defaults"]
 		])
 		.action_({ | obj |
@@ -249,16 +241,16 @@ NodeProxyGui2 {
 		var slidersFunc = { | obj ...args |
 			var key, val, spec;
 			switch(args[0],
-			\set, {
-				key = args[1][0];
-				if(params[key].notNil, {
-					val = args[1][1];
-					spec = params[key].value;
-					{
-						sliderDict[key][\numBox].value_(spec.constrain(val));
-						sliderDict[key][\slider].value_(spec.unmap(val));
-					}.defer;
-				});
+				\set, {
+					key = args[1][0];
+					if(params[key].notNil, {
+						val = args[1][1];
+						spec = params[key].value;
+						{
+							sliderDict[key][\numBox].value_(spec.constrain(val));
+							sliderDict[key][\slider].value_(spec.unmap(val));
+						}.defer;
+					});
 			})
 		};
 		ndef.addDependant(slidersFunc);
@@ -280,8 +272,7 @@ NodeProxyGui2 {
 				.orientation_(\horizontal)
 				.value_(spec.unmap(paramVal))
 				.action_({ | obj |
-					var sliderVal = obj.value;
-					var mappedVal = spec.map(sliderVal);
+					var mappedVal = spec.map(obj.value);
 					valueBox.value = mappedVal;
 					ndef.set(pName, mappedVal);
 				});
@@ -294,10 +285,9 @@ NodeProxyGui2 {
 				// Value box
 				var valueBox = NumberBox.new()
 				.action_({ | obj |
-					var val = obj.value;
-					var mappedVal = spec.unmap(val);
+					var mappedVal = spec.unmap(obj.value);
 					slider.value_(mappedVal);
-					ndef.set(pName, val);
+					ndef.set(pName, obj.value);
 				})
 				.decimals_(4)
 				.value_(spec.constrain(paramVal))
@@ -318,9 +308,8 @@ NodeProxyGui2 {
 		.orientation_(\horizontal)
 		.value_(ndef.vol)
 		.action_({ | obj |
-			var sliderVal = obj.value;
-			ndef.vol_(sliderVal);
-			volvalueBox.value_(sliderVal);
+			ndef.vol_(obj.value);
+			volvalueBox.value_(obj.value);
 		});
 
 		// Label
@@ -332,11 +321,9 @@ NodeProxyGui2 {
 		volvalueBox = NumberBox.new()
 		.decimals_(4)
 		.action_({ | obj |
-			var val = obj.value;
-            val = val.clip(0.0,1.0);
-            obj.value = val;
-			volslider.value_(val);
-			ndef.vol_(val);
+			obj.value = obj.value.clip(0.0, 1.0);
+			volslider.value_(obj.value);
+			ndef.vol_(obj.value);
 		})
 		.value_(ndef.vol)
 		.font_(valueFont);
