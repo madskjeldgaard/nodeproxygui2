@@ -27,6 +27,17 @@
 		}
 	}
 
+	varyAllParamsMapped{ | deviation = 0.1 |
+		var params = this.prFilteredParams();
+
+		params.do{ | param |
+			var val = this.get(param);
+			var spec = Spec.specs.at(param).asSpec;
+			val = (spec.unmap(val) + 0.0.gauss(deviation)).clip(0, 1);
+			this.set(param, spec.map(val))
+		}
+	}
+
 	setDefaults{
 		var params = this.prFilteredParams();
 
