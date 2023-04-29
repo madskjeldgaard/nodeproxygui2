@@ -1,49 +1,43 @@
 TITLE:: NodeProxyGui2
 summary:: Providing a modern alternative to the NodeProxy gui
-categories:: Undocumented classes
-related:: Classes/SomeRelatedClass, Reference/SomeRelatedStuff, etc.
+categories:: JITLib>GUI
+related:: Classes/NdefGui, Classes/NdefParamGui
 
 DESCRIPTION::
-A slightly longer description of this package
+
 
 CLASSMETHODS::
 
 METHOD:: new
-(describe method here)
 
-ARGUMENT:: arga
-(describe argument here)
+ARGUMENT:: nodeproxy
 
-ARGUMENT:: argb
-(describe argument here)
+ARGUMENT:: updateRate
 
-ARGUMENT:: argc
-(describe argument here)
+METHOD:: defaultIgnoreParams
+Parameters to be ignored when calling link::#-randomize::.
+code::
+NodeProxyGui2.defaultIgnoreParams;
+-> [ numChannels, vol, numOuts, buffer ]
+::
 
-returns:: (describe returnvalue here)
-
+METHOD:: ignoreParams
+Get or set the parameters to be ignored when calling link::#-randomize::.
+This should be an link::Classes/Array:: with symbols.
+At initialisation this array will be populated from defaultIgnoreParams.
 
 INSTANCEMETHODS::
 
-METHOD:: init
-(describe method here)
+PRIVATE:: init, initFonts
 
-ARGUMENT:: arga
-(describe argument here)
-
-ARGUMENT:: argb
-(describe argument here)
-
-ARGUMENT:: argc
-(describe argument here)
-
-returns:: (describe returnvalue here)
+METHOD:: randomize
+Set parameters to random values. This will use the internal link::Classes/ControlSpec:: to figure out the range and ignore parameters in the array link::#*ignoreParams::.
 
 EXAMPLES::
 
 code::
 (
-Ndef(\yiyi, {|freq=100, amp=0.5, pan=0| 
+Ndef(\yiyi, {|freq=100, amp=0.5, pan=0|
 	Pan2.ar(SinOsc.ar(freq), pos: pan, level: amp)
 });
 )
@@ -51,6 +45,8 @@ Ndef(\yiyi, {|freq=100, amp=0.5, pan=0|
 Ndef(\yiyi).gui2;
 
 // dont randomize ignored parameters
+Ndef(\yiyi).randomizeAllParamsMapped;
 NodeProxyGui2.ignoreParams.add(\amp);
+Ndef(\yiyi).randomizeAllParamsMapped;
 NodeProxyGui2.ignoreParams.remove(\amp);
 ::
