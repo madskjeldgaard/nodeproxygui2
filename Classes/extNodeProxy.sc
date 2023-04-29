@@ -1,14 +1,18 @@
 + NodeProxy {
 	prFilteredParams{
-		var ignoreParams = NodeProxyGui2.ignoreParams;
+		var ignoreParams = (NodeProxyGui2.ignoreParams ? []) ++ NodeProxyGui2.defaultIgnoreParams;
 		^this.controlKeys.reject({ | paramName |
-			// Ignore this parameter in the randomization if it is in the ignoreParams list
-			ignoreParams.includes(paramName.asSymbol) or: {
-				// Does the parameter name end with one of the ignored parameters? If so, ignore it as well
-				ignoreParams.any({| ignored |
-					paramName.asString.containsi(ignored.asString)
-				})
-			}
+
+            var predicate = ignoreParams.any{|ignoreParam|
+                ignoreParam.matchRegexp(paramName.asString)
+            };
+
+            // if(predicate){
+            //     ("Ignoring param: " ++ paramName.asString ++ " because it matches ignoreparams" ).postln
+            // };
+
+            predicate
+
 		})
 	}
 
