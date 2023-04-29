@@ -10,7 +10,9 @@
 - NodeProxyGui2: seperate state into dict (old todo)
 - ignoreParams: impl a wildcard option e.g. "*feedback" so that all "MadsSuperfeedback", "MadsIsAGain", and alike will be ignored instead of the some what personal implementation as of now i.e. (3 lines down) <<// Does the parameter name end with one of the ignored parameters? If so, ignore it as well>> in `extNodeProxy` -> `prFilteredParams`
 - gui2's _stop_ is "free" and _free_ is "stop" .. oh my `8=()`
-
+- add visual indicator (darker grey) on play button state
+- Volume button placement (default + dynamic?)
+- Volume button sync
 
 ## Add standard gui functionality
 
