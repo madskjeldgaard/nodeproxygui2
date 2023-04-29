@@ -236,6 +236,9 @@ NodeProxyGui2 {
 		// 	dict[\slider].valueAction_(rrand(0.0,1.0))
 		// }
 	}
+	vary {| deviation = 0.1 |
+		ndef.varyAllParamsMapped(deviation)
+	}
 
 	makeSliders {
 		var slidersFunc = { | obj ...args |

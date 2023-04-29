@@ -33,6 +33,12 @@ PRIVATE:: init, initFonts
 METHOD:: randomize
 Set parameters to random values. This will use the internal link::Classes/ControlSpec:: to figure out the range and ignore parameters in the array link::#*ignoreParams::.
 
+METHOD:: vary
+Set parameters to nearby random values. This will use the internal link::Classes/ControlSpec:: to figure out the range and ignore parameters in the array link::#*ignoreParams::.
+
+argument:: deviation
+In percent.
+
 EXAMPLES::
 
 code::
