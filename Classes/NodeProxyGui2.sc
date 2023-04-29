@@ -57,7 +57,7 @@ NodeProxyGui2 {
 			*sliders
 		);
 
-		window.front;
+		window.resizeToHint.front;
 
 	}
 
