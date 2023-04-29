@@ -15,15 +15,15 @@ ARGUMENT:: nodeproxy
 ARGUMENT:: updateRate
 
 METHOD:: defaultIgnoreParams
-Parameters to be ignored when calling link::#-randomize::.
+Parameters to be ignored when calling link::#-randomize:: and link::#-vary::.
 code::
 NodeProxyGui2.defaultIgnoreParams;
 -> [ numChannels, vol, numOuts, buffer ]
 ::
 
 METHOD:: ignoreParams
-Get or set the parameters to be ignored when calling link::#-randomize::.
-This should be an link::Classes/Array:: with symbols.
+Get or set the parameters to be ignored when calling link::#-randomize:: and link::#-vary::.
+This should be an link::Classes/Array:: with strings.
 At initialisation this array will be populated from defaultIgnoreParams.
 
 INSTANCEMETHODS::
@@ -52,7 +52,7 @@ Ndef(\yiyi).gui2;
 
 // dont randomize ignored parameters
 Ndef(\yiyi).randomizeAllParamsMapped;
-NodeProxyGui2.ignoreParams.add(\amp);
+NodeProxyGui2.ignoreParams.add("amp");
 Ndef(\yiyi).randomizeAllParamsMapped;
-NodeProxyGui2.ignoreParams.remove(\amp);
+NodeProxyGui2.ignoreParams.remove("amp");
 ::
