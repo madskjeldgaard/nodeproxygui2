@@ -1,6 +1,6 @@
 NodeProxyGui2 {
 	classvar <>ignoreParams;
-	const <defaultIgnoreParams = #[\numChannels, \vol, \numOuts, \buffer];
+	const <defaultIgnoreParams = #["numChannels", "vol", "numOuts", "buffer"];
 
 	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fadeTime, fadeTimeLabel, header, randomizeParams, volslider, vollabel, volvalueBox, defaultsButton;
 
