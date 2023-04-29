@@ -2,7 +2,7 @@ NodeProxyGui2 {
 	classvar <>ignoreParams;
 	const <defaultIgnoreParams = #[\numChannels, \vol, \numOuts, \buffer];
 
-	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fade, fadeLabel, header, randomizeParams, volslider, vollabel, volvalueBox, defaultsButton;
+	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fadeTime, fadeTimeLabel, header, randomizeParams, volslider, vollabel, volvalueBox, defaultsButton;
 
 	var sliderDict;
 
@@ -67,7 +67,7 @@ NodeProxyGui2 {
 				\set, {
 					switch(args[1][0],
 						\fadeTime, {
-							{fade.value = ndef.fadeTime}.defer;
+							{fadeTime.value = ndef.fadeTime}.defer;
 						},
 					);
 				},
@@ -118,11 +118,11 @@ NodeProxyGui2 {
 		})
 		.font_(infolabelFont);
 
-		fadeLabel = StaticText.new()
-		.string_("fade:")
+		fadeTimeLabel = StaticText.new()
+		.string_("fadeTime:")
 		.font_(infolabelFont);
 
-		fade = NumberBox.new()
+		fadeTime = NumberBox.new()
 		.clipLo_(0.0)
 		.decimals_(4)
 		.scroll_step_(0.1) // mouse
@@ -138,7 +138,7 @@ NodeProxyGui2 {
 			header,
 			HLayout([numChannelsLabel, s:1], [numChannels, s: 1, a: \left]),
 			HLayout([rateLabel, s: 1], [ndefrate, s:1, a: \left]),
-			HLayout([fadeLabel, s: 1], [fade, s:1, a: \left]),
+			HLayout([fadeTimeLabel, s: 1], [fadeTime, s:1, a: \left]),
 		);
 	}
 
