@@ -254,7 +254,15 @@ NodeProxyGui2 {
 							sliderDict[key][\slider].value_(spec.unmap(val));
 						}.defer;
 					});
-			})
+				},
+				\vol, {
+					val = args[1][0];
+					{
+						volvalueBox.value_(val.max(0.0));
+						volslider.value_(val);
+					}.defer;
+				}
+			)
 		};
 		ndef.addDependant(slidersFunc);
 		window.onClose = {

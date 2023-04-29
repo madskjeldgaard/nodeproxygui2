@@ -47,6 +47,11 @@
 		}
 	}
 
+	vol_ {|val|
+		super.vol_(val);
+		this.changed(\vol, [val]);
+	}
+
 	gui2{
 		NodeProxyGui2.new(this);
 	}
