@@ -5,15 +5,15 @@
 
 		^this.controlKeys.reject({ | paramName |
 
-            var predicate = ignoreParams.any{ | ignoreParam |
-                ignoreParam.matchRegexp(paramName.asString)
-            };
+			var predicate = ignoreParams.any{ | ignoreParam |
+				ignoreParam.matchRegexp(paramName.asString)
+			};
 
-            // if(predicate){
-            //     ("Ignoring param: " ++ paramName.asString ++ " because it matches ignoreparams" ).postln
-            // };
+			// if(predicate){
+			//     ("Ignoring param: " ++ paramName ++ " because it matches ignoreparams" ).postln
+			// };
 
-            predicate
+			predicate
 		})
 	}
 
@@ -37,6 +37,11 @@
 			val = (spec.unmap(val) + 0.0.gauss(deviation)).clip(0, 1);
 			this.set(param, spec.map(val))
 		}
+	}
+
+	vol_ { | val |
+		super.vol_(val);
+		this.changed(\vol, [val]);
 	}
 
 	setDefaults {
