@@ -50,6 +50,7 @@ NodeProxyGui2 {
 		this.makeSliders();
 		this.makeTransportSection();
 		this.makeInfoSection();
+		this.setUpDependencies();
 
 		window.layout = VLayout(
 			[info, s: 1],
@@ -61,26 +62,57 @@ NodeProxyGui2 {
 
 	}
 
-	makeInfoSection {
-		var infoFunc = { | obj ...args |
+	setUpDependencies {
+
+		var updateFunc = { | obj ...args |
+			var key, val, spec;
 			switch(args[0],
 				\set, {
-					switch(args[1][0],
-						\fadeTime, {
-							{fadeTime.value = ndef.fadeTime}.defer;
-						},
-					);
+					key = args[1][0];
+					if(key == \fadeTime, {
+						{fadeTime.value = ndef.fadeTime}.defer
+					}, {
+						if(params[key].notNil, {
+							val = args[1][1];
+							spec = params[key].value;
+							{
+								sliderDict[key][\numBox].value_(spec.constrain(val));
+								sliderDict[key][\slider].value_(spec.unmap(val));
+							}.defer
+						})
+					})
 				},
 				\bus, {
-					{numChannels.value = args[1].numChannels}.defer;
+					{numChannels.value = args[1].numChannels}.defer
 				},
 				\rebuild, {
-					{ndefrate.value = if(ndef.rate == \audio, 0, 1)}.defer;
-		})};
-		ndef.addDependant(infoFunc);
-		window.onClose = {
-			ndef.removeDependant(infoFunc);
+					{ndefrate.value = if(ndef.rate == \audio, 0, 1)}.defer
+				},
+				\play, {
+					{play.value_(1)}.defer
+				},
+				\stop, {
+					{play.value_(0)}.defer
+				},
+				\vol, {
+					val = args[1][0];
+					{
+						volvalueBox.value_(val.max(0.0));
+						volslider.value_(val);
+					}.defer
+				}
+			);
 		};
+		ndef.addDependant(updateFunc);
+		ndef.monitor.addDependant(updateFunc);
+
+		window.onClose = {
+			ndef.monitor.removeDependant(updateFunc);
+			ndef.removeDependant(updateFunc);
+		};
+	}
+
+	makeInfoSection {
 
 		numChannelsLabel = StaticText.new()
 		.string_("channels:")
@@ -143,11 +175,7 @@ NodeProxyGui2 {
 	}
 
 	makeTransportSection {
-		var playFunc = { | obj ...args |
-			switch(args[0],
-				\play, {{play.value_(1)}.defer},
-				\stop, {{play.value_(0)}.defer}
-		)};
+
 		play = Button.new()
 		.states_(#[
 			["play"],
@@ -161,9 +189,7 @@ NodeProxyGui2 {
 				ndef.stop
 			})
 		})
-		.value_(ndef.isMonitoring.binaryValue)
-		.onClose_({ ndef.removeDependant(playFunc) });
-		ndef.addDependant(playFunc);
+		.value_(ndef.isMonitoring.binaryValue);
 
 		clear = Button.new()
 		.states_(#[
@@ -241,33 +267,6 @@ NodeProxyGui2 {
 	}
 
 	makeSliders {
-		var slidersFunc = { | obj ...args |
-			var key, val, spec;
-			switch(args[0],
-				\set, {
-					key = args[1][0];
-					if(params[key].notNil, {
-						val = args[1][1];
-						spec = params[key].value;
-						{
-							sliderDict[key][\numBox].value_(spec.constrain(val));
-							sliderDict[key][\slider].value_(spec.unmap(val));
-						}.defer;
-					});
-				},
-				\vol, {
-					val = args[1][0];
-					{
-						volvalueBox.value_(val.max(0.0));
-						volslider.value_(val);
-					}.defer;
-				}
-			)
-		};
-		ndef.addDependant(slidersFunc);
-		window.onClose = {
-			ndef.removeDependant(slidersFunc);
-		};
 
 		sliders = [];
 
