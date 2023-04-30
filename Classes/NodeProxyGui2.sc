@@ -15,6 +15,7 @@ NodeProxyGui2 {
 	var buttonFont;
 
 	var params;
+	var specUpdateFunc;
 
 	// this is a normal constructor method
 	*new { | nodeproxy, updateRate = 0.5 |
@@ -34,9 +35,10 @@ NodeProxyGui2 {
 			[this.makeTransportSection(), s: 1],
 			//parameterSection gets added here in makeParameterSection
 		);
-		this.makeParameterSection();
 
 		this.setUpDependencies();
+
+		this.makeParameterSection();
 
 		window.front;
 
@@ -44,7 +46,9 @@ NodeProxyGui2 {
 
 	setUpDependencies {
 
-		var updateFunc = { | obj ...args |
+		var updateFunc, specAddFunc;
+
+		updateFunc = { | obj ...args |
 			{
 				var key, val, spec;
 				switch(args[0],
@@ -77,9 +81,27 @@ NodeProxyGui2 {
 		};
 		ndef.addDependant(updateFunc);
 
+		specAddFunc = { | obj ...args |
+			var key, spec;
+			if(args[0] == \add, {
+				key = args[1][0];
+				spec = args[1][1];
+				if(params[key].notNil and:{params[key] != spec}, {
+					this.setUpParameters();
+				})
+			})
+		};
+		Spec.addDependant(specAddFunc);
+
+		specUpdateFunc = { | obj ...args |
+			this.setUpParameters();
+		};
+
 		window.onClose = {
 			ndef.monitor.removeDependant(updateFunc);
 			ndef.removeDependant(updateFunc);
+			Spec.removeDependant(specAddFunc);
+			params.do{|spec| spec.removeDependant(specUpdateFunc)};
 		};
 	}
 
@@ -231,23 +253,33 @@ NodeProxyGui2 {
 	}
 
 	makeParameterSection {
+
 		var ndefKeys = ndef.controlKeys;
 		var paramKeys = params.keys;
 
-		if(paramKeys.size != ndefKeys.size or:{paramKeys.includesAll(ndefKeys).not}, {
-
-			params.clear;
-			ndefKeys.do{ | paramname |
-				var spec = (Spec.specs.at(paramname) ?? {ndef.specs.at(paramname)}).asSpec;
-				//"Spec for paramname %: %".format(paramname, spec).postln;
-				params.put(paramname, spec)
-			};
-
-			if(parameterSection.notNil, {parameterSection.close});
-			parameterSection = this.makeSliders();
-			window.layout.add(parameterSection);
-			window.resizeToHint;
+		if(paramKeys.size != ndefKeys.size or: {paramKeys.includesAll(ndefKeys).not}, {
+			this.setUpParameters();
 		});
+
+	}
+
+	setUpParameters {
+
+		params.do{|spec| spec.removeDependant(specUpdateFunc)};
+		params.clear;
+
+		ndef.controlKeys.do{ | paramname |
+			var spec = (Spec.specs.at(paramname) ?? {ndef.specs.at(paramname)}).asSpec;
+			//"Spec for paramname %: %".format(paramname, spec).postln;
+			spec.addDependant(specUpdateFunc);
+			params.put(paramname, spec)
+		};
+
+		if(parameterSection.notNil, {parameterSection.close});
+		parameterSection = this.makeSliders();
+		window.layout.add(parameterSection);
+		window.resizeToHint;
+
 	}
 
 	makeSliders {
