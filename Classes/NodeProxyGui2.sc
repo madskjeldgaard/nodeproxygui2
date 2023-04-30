@@ -232,7 +232,7 @@ NodeProxyGui2 {
 
 	makeParameterSection {
 		var ndefKeys = ndef.controlKeys;
-		var paramKeys = params ?? {params.keys};
+		var paramKeys = params.keys;
 
 		if(paramKeys.size != ndefKeys.size or:{paramKeys.includesAll(ndefKeys).not}, {
 
