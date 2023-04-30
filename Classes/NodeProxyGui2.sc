@@ -100,11 +100,13 @@ NodeProxyGui2 {
 						volvalueBox.value_(val.max(0.0));
 						volslider.value_(val);
 					}.defer
-				}
+				},
+				\monitor, {
+					ndef.monitor.addDependant(updateFunc);
+				},
 			);
 		};
 		ndef.addDependant(updateFunc);
-		ndef.monitor.addDependant(updateFunc);
 
 		window.onClose = {
 			ndef.monitor.removeDependant(updateFunc);
