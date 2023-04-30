@@ -2,12 +2,10 @@ NodeProxyGui2 {
 	classvar <>ignoreParams;
 	const <defaultIgnoreParams = #["numChannels", "vol", "numOuts", "buffer"];
 
-	var ndef, rateLabel, ndefrate, info, window, sliders, transport, play, clear, send, free, numChannels, numChannelsLabel, name, scope, fadeTime, fadeTimeLabel, header, randomizeParams, volslider, vollabel, volvalueBox, defaultsButton;
-
+	var ndef, ndefrate, window, play, numChannels, fadeTime, volslider, volvalueBox;
+	var parameterSection;
 	var sliderDict;
 
-	var fontSize;
-	var headerFontSize;
 	var headerFont;
 
 	var labelFont;
@@ -17,8 +15,6 @@ NodeProxyGui2 {
 	var buttonFont;
 
 	var params;
-	var paramNames;
-
 
 	// this is a normal constructor method
 	*new { | nodeproxy, updateRate = 0.5 |
@@ -26,7 +22,6 @@ NodeProxyGui2 {
 	}
 
 	init { | nodeproxy, updateRate |
-
 		ignoreParams = Set.newFrom(defaultIgnoreParams);
 		ndef = nodeproxy;
 		this.initFonts();
@@ -34,77 +29,51 @@ NodeProxyGui2 {
 		sliderDict = IdentityDictionary.new();
 
 		window = Window.new(ndef.key);
+		window.layout = VLayout(
+			[this.makeInfoSection(), s: 1],
+			[this.makeTransportSection(), s: 1],
+			//parameterSection gets added here in makeParameterSection
+		);
+		this.makeParameterSection();
 
-		// Get parameter names and make sliders
-		paramNames = ndef.controlKeys;
-
-		// Populate param dict
-		paramNames.do{ | paramname |
-			var spec = (Spec.specs.at(paramname) ?? {ndef.specs.at(paramname)}).asSpec;
-			//"Spec for paramname %: %".format(paramname, spec).postln;
-
-			// @TODO this should remove no longer used params (and sliders)
-			params.put(paramname, spec)
-		};
-
-		this.makeSliders();
-		this.makeTransportSection();
-		this.makeInfoSection();
 		this.setUpDependencies();
 
-		window.layout = VLayout(
-			[info, s: 1],
-			[transport, s:1],
-			*sliders
-		);
-
-		window.resizeToHint.front;
+		window.front;
 
 	}
 
 	setUpDependencies {
 
 		var updateFunc = { | obj ...args |
-			var key, val, spec;
-			switch(args[0],
-				\set, {
-					key = args[1][0];
-					if(key == \fadeTime, {
-						{fadeTime.value = ndef.fadeTime}.defer
-					}, {
-						if(params[key].notNil, {
-							val = args[1][1];
-							spec = params[key].value;
-							{
+			{
+				var key, val, spec;
+				switch(args[0],
+					\set, {
+						key = args[1][0];
+						if(key == \fadeTime, {
+							fadeTime.value = ndef.fadeTime
+						}, {
+							if(params[key].notNil, {
+								val = args[1][1];
+								spec = params[key].value;
 								sliderDict[key][\numBox].value_(spec.constrain(val));
 								sliderDict[key][\slider].value_(spec.unmap(val));
-							}.defer
+							})
 						})
-					})
-				},
-				\bus, {
-					{numChannels.value = args[1].numChannels}.defer
-				},
-				\rebuild, {
-					{ndefrate.value = if(ndef.rate == \audio, 0, 1)}.defer
-				},
-				\play, {
-					{play.value_(1)}.defer
-				},
-				\stop, {
-					{play.value_(0)}.defer
-				},
-				\vol, {
-					val = args[1][0];
-					{
+					},
+					\play, {play.value_(1)},
+					\stop, {play.value_(0)},
+					\vol, {
+						val = args[1][0];
 						volvalueBox.value_(val.max(0.0));
 						volslider.value_(val);
-					}.defer
-				},
-				\monitor, {
-					ndef.monitor.addDependant(updateFunc);
-				},
-			);
+					},
+					\bus, {numChannels.value = args[1].numChannels},
+					\monitor, {ndef.monitor.addDependant(updateFunc)},
+					\rebuild, {ndefrate.value = if(ndef.rate == \audio, 0, 1)},
+					\source, {this.makeParameterSection()},
+				)
+			}.defer
 		};
 		ndef.addDependant(updateFunc);
 
@@ -115,6 +84,8 @@ NodeProxyGui2 {
 	}
 
 	makeInfoSection {
+
+		var numChannelsLabel, rateLabel, fadeTimeLabel, header;
 
 		numChannelsLabel = StaticText.new()
 		.string_("channels:")
@@ -168,15 +139,18 @@ NodeProxyGui2 {
 		.font_(valueFont);
 
 		header = StaticText.new().string_(ndef.key).font_(headerFont);
-		info = VLayout(
+
+		^VLayout(
 			header,
-			HLayout([numChannelsLabel, s:1], [numChannels, s: 1, a: \left]),
-			HLayout([rateLabel, s: 1], [ndefrate, s:1, a: \left]),
-			HLayout([fadeTimeLabel, s: 1], [fadeTime, s:1, a: \left]),
-		);
+			HLayout([numChannelsLabel, s: 1], [numChannels, s: 1, a: \left]),
+			HLayout([rateLabel, s: 1], [ndefrate, s: 1, a: \left]),
+			HLayout([fadeTimeLabel, s: 1], [fadeTime, s: 1, a: \left]),
+		)
 	}
 
 	makeTransportSection {
+
+		var clear, send, scope, free, randomizeParams, defaultsButton;
 
 		play = Button.new()
 		.states_(#[
@@ -251,27 +225,65 @@ NodeProxyGui2 {
 		})
 		.font_(buttonFont);
 
-
-		// Create layout
-		transport = HLayout(
+		^HLayout(
 			play, clear, free, scope, send, randomizeParams, defaultsButton
 		)
 	}
 
-	randomize {
-		ndef.randomizeAllParamsMapped(0.0, 1.0);
-		// sliderDict.keysValuesDo{ | name, dict |
-		// 	dict[\slider].valueAction_(rrand(0.0,1.0))
-		// }
-	}
-	vary {| deviation = 0.1 |
-		ndef.varyAllParamsMapped(deviation)
+	makeParameterSection {
+		var ndefKeys = ndef.controlKeys;
+		var paramKeys = params ?? {params.keys};
+
+		if(paramKeys.size != ndefKeys.size or:{paramKeys.includesAll(ndefKeys).not}, {
+
+			params.clear;
+			ndefKeys.do{ | paramname |
+				var spec = (Spec.specs.at(paramname) ?? {ndef.specs.at(paramname)}).asSpec;
+				//"Spec for paramname %: %".format(paramname, spec).postln;
+				params.put(paramname, spec)
+			};
+
+			if(parameterSection.notNil, {parameterSection.close});
+			parameterSection = this.makeSliders();
+			window.layout.add(parameterSection);
+			window.resizeToHint;
+		});
 	}
 
 	makeSliders {
 
-		sliders = [];
+		var view, vollabel, volLayout;
 
+		view = View().layout_(VLayout());
+
+		volslider = Slider.new()
+		.orientation_(\horizontal)
+		.value_(ndef.vol)
+		.action_({ | obj |
+			ndef.vol_(obj.value);
+			volvalueBox.value_(obj.value);
+		});
+
+		// Label
+		vollabel = StaticText.new
+		.string_("volume")
+		.font_(labelFont);
+
+		// Value box
+		volvalueBox = NumberBox.new()
+		.decimals_(4)
+		.action_({ | obj |
+			obj.value = obj.value.clip(0.0, 1.0);
+			volslider.value_(obj.value);
+			ndef.vol_(obj.value);
+		})
+		.value_(ndef.vol)
+		.font_(valueFont);
+
+		volLayout = HLayout([vollabel, s: 1], [volvalueBox, s: 1], [volslider, s: 4]);
+		view.layout.add(volLayout);
+
+		sliderDict.clear;
 		params.sortedKeysValuesDo{ | pName, spec |
 
 			// Only make slider for this parameter, if it is a number
@@ -306,45 +318,23 @@ NodeProxyGui2 {
 				.font_(valueFont);
 
 				// Slider Layout
-				var sliderLayout = HLayout([label, s: 1], [valueBox, s:1], [slider, s: 4]);
+				var sliderLayout = HLayout([label, s: 1], [valueBox, s: 1], [slider, s: 4]);
 
 				// This is used to be able to fetch the sliders later when they need to be updated
 				sliderDict.put(pName, (slider: slider, numBox: valueBox));
 
-				sliders = sliders.add(sliderLayout);
+				view.layout.add(sliderLayout)
 
 			}
 		};
 
-		volslider = Slider.new()
-		.orientation_(\horizontal)
-		.value_(ndef.vol)
-		.action_({ | obj |
-			ndef.vol_(obj.value);
-			volvalueBox.value_(obj.value);
-		});
-
-		// Label
-		vollabel = StaticText.new
-		.string_("volume")
-		.font_(labelFont);
-
-		// Value box
-		volvalueBox = NumberBox.new()
-		.decimals_(4)
-		.action_({ | obj |
-			obj.value = obj.value.clip(0.0, 1.0);
-			volslider.value_(obj.value);
-			ndef.vol_(obj.value);
-		})
-		.value_(ndef.vol)
-		.font_(valueFont);
-
-		// Put volume slider at the top
-		sliders = [HLayout([vollabel, s: 1], [volvalueBox, s:1], [volslider, s: 4]) ]++ sliders;
+		^view
 	}
 
 	initFonts {
+
+		var fontSize, headerFontSize;
+
 		fontSize = 14;
 		headerFontSize = fontSize;
 		headerFont = Font.sansSerif(headerFontSize, bold: true, italic: false);
@@ -352,6 +342,17 @@ NodeProxyGui2 {
 		infolabelFont = Font.monospace(fontSize, bold: false, italic: false);
 		valueFont = Font.monospace(fontSize, bold: false, italic: false);
 		buttonFont = Font.monospace(fontSize, bold: false, italic: false);
+	}
+
+	randomize {
+		ndef.randomizeAllParamsMapped(0.0, 1.0);
+		// sliderDict.keysValuesDo{ | name, dict |
+		// 	dict[\slider].valueAction_(rrand(0.0,1.0))
+		// }
+	}
+
+	vary {| deviation = 0.1 |
+		ndef.varyAllParamsMapped(deviation)
 	}
 
 }
