@@ -87,14 +87,14 @@ NodeProxyGui2 {
 				key = args[1][0];
 				spec = args[1][1];
 				if(params[key].notNil and:{params[key] != spec}, {
-					this.setUpParameters();
+					{this.setUpParameters()}.defer;
 				})
 			})
 		};
 		Spec.addDependant(specAddFunc);
 
 		specUpdateFunc = { | obj ...args |
-			this.setUpParameters();
+			{this.setUpParameters()}.defer;
 		};
 
 		window.onClose = {
