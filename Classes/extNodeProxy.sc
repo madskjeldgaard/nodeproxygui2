@@ -38,6 +38,11 @@
 		}
 	}
 
+	vol_ {|val|
+		super.vol_(val);
+		this.changed(\vol, [val]);
+	}
+
 	setDefaults{
 		var params = this.prFilteredParams();
 
