@@ -1,5 +1,7 @@
 NodeProxyGui2 {
+
 	classvar <>ignoreParams;
+
 	const <defaultIgnoreParams = #["numChannels", "vol", "numOuts", "buffer"];
 
 	var ndef, ndefrate, window, play, numChannels, fadeTime, volslider, volvalueBox;
@@ -41,11 +43,9 @@ NodeProxyGui2 {
 		this.makeParameterSection();
 
 		window.front;
-
 	}
 
 	setUpDependencies {
-
 		var updateFunc, specAddFunc;
 
 		updateFunc = { | obj ...args |
@@ -101,12 +101,11 @@ NodeProxyGui2 {
 			ndef.monitor.removeDependant(updateFunc);
 			ndef.removeDependant(updateFunc);
 			Spec.removeDependant(specAddFunc);
-			params.do{|spec| spec.removeDependant(specUpdateFunc)};
+			params.do{ | spec | spec.removeDependant(specUpdateFunc)};
 		};
 	}
 
 	makeInfoSection {
-
 		var numChannelsLabel, rateLabel, fadeTimeLabel, header;
 
 		numChannelsLabel = StaticText.new()
@@ -171,7 +170,6 @@ NodeProxyGui2 {
 	}
 
 	makeTransportSection {
-
 		var clear, send, scope, free, randomizeParams, defaultsButton;
 
 		play = Button.new()
@@ -202,7 +200,7 @@ NodeProxyGui2 {
 		.states_(#[
 			["send"]
 		])
-		.action_({|obj|
+		.action_({ | obj |
 			ndef.send
 		})
 		.font_(buttonFont);
@@ -221,11 +219,7 @@ NodeProxyGui2 {
 			["free"]
 		])
 		.action_({ | obj |
-
-			// if(obj.value == 1, {
 			ndef.free;
-			// })
-
 		})
 		.font_(buttonFont);
 
@@ -253,19 +247,16 @@ NodeProxyGui2 {
 	}
 
 	makeParameterSection {
-
 		var ndefKeys = ndef.controlKeys;
 		var paramKeys = params.keys;
 
 		if(paramKeys.size != ndefKeys.size or: {paramKeys.includesAll(ndefKeys).not}, {
 			this.setUpParameters();
 		});
-
 	}
 
 	setUpParameters {
-
-		params.do{|spec| spec.removeDependant(specUpdateFunc)};
+		params.do{ | spec | spec.removeDependant(specUpdateFunc)};
 		params.clear;
 
 		ndef.controlKeys.do{ | paramname |
@@ -279,11 +270,9 @@ NodeProxyGui2 {
 		parameterSection = this.makeSliders();
 		window.layout.add(parameterSection);
 		window.resizeToHint;
-
 	}
 
 	makeSliders {
-
 		var view, vollabel, volLayout;
 
 		view = View().layout_(VLayout());
@@ -317,13 +306,14 @@ NodeProxyGui2 {
 
 		sliderDict.clear;
 		params.sortedKeysValuesDo{ | pName, spec |
+			var paramVal, slider, label, valueBox, sliderLayout;
 
 			// Only make slider for this parameter, if it is a number
 			ndef.get(pName).isKindOf(SimpleNumber).if{
 
 				// Slider
-				var paramVal = ndef.get(pName);
-				var slider = Slider.new()
+				paramVal = ndef.get(pName);
+				slider = Slider.new()
 				// .step_(spec.step)
 				.orientation_(\horizontal)
 				.value_(spec.unmap(paramVal))
@@ -334,12 +324,12 @@ NodeProxyGui2 {
 				});
 
 				// Label
-				var label = StaticText.new
+				label = StaticText.new
 				.string_(pName)
 				.font_(labelFont);
 
 				// Value box
-				var valueBox = NumberBox.new()
+				valueBox = NumberBox.new()
 				.action_({ | obj |
 					var mappedVal = spec.unmap(obj.value);
 					slider.value_(mappedVal);
@@ -350,13 +340,12 @@ NodeProxyGui2 {
 				.font_(valueFont);
 
 				// Slider Layout
-				var sliderLayout = HLayout([label, s: 1], [valueBox, s: 1], [slider, s: 4]);
+				sliderLayout = HLayout([label, s: 1], [valueBox, s: 1], [slider, s: 4]);
 
 				// This is used to be able to fetch the sliders later when they need to be updated
 				sliderDict.put(pName, (slider: slider, numBox: valueBox));
 
 				view.layout.add(sliderLayout)
-
 			}
 		};
 
@@ -364,7 +353,6 @@ NodeProxyGui2 {
 	}
 
 	initFonts {
-
 		var fontSize, headerFontSize;
 
 		fontSize = 14;
@@ -378,12 +366,9 @@ NodeProxyGui2 {
 
 	randomize {
 		ndef.randomizeAllParamsMapped(0.0, 1.0);
-		// sliderDict.keysValuesDo{ | name, dict |
-		// 	dict[\slider].valueAction_(rrand(0.0,1.0))
-		// }
 	}
 
-	vary {| deviation = 0.1 |
+	vary { | deviation = 0.1 |
 		ndef.varyAllParamsMapped(deviation)
 	}
 

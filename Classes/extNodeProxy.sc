@@ -1,9 +1,11 @@
 + NodeProxy {
-	prFilteredParams{
-		var ignoreParams = (NodeProxyGui2.ignoreParams ? []) ++ NodeProxyGui2.defaultIgnoreParams;
+
+	prFilteredParams {
+		var ignoreParams = NodeProxyGui2.ignoreParams.asArray ++ NodeProxyGui2.defaultIgnoreParams;
+
 		^this.controlKeys.reject({ | paramName |
 
-            var predicate = ignoreParams.any{|ignoreParam|
+            var predicate = ignoreParams.any{ | ignoreParam |
                 ignoreParam.matchRegexp(paramName.asString)
             };
 
@@ -12,11 +14,10 @@
             // };
 
             predicate
-
 		})
 	}
 
-	randomizeAllParamsMapped{ | randmin = 0.0, randmax = 1.0 |
+	randomizeAllParamsMapped { | randmin = 0.0, randmax = 1.0 |
 		var params = this.prFilteredParams();
 
 		params.do{ | param |
@@ -27,7 +28,7 @@
 		}
 	}
 
-	varyAllParamsMapped{ | deviation = 0.1 |
+	varyAllParamsMapped { | deviation = 0.1 |
 		var params = this.prFilteredParams();
 
 		params.do{ | param |
@@ -38,7 +39,7 @@
 		}
 	}
 
-	setDefaults{
+	setDefaults {
 		var params = this.prFilteredParams();
 
 		params.do{ | param |
@@ -47,7 +48,7 @@
 		}
 	}
 
-	gui2{
+	gui2 {
 		^NodeProxyGui2.new(this)
 	}
 }
