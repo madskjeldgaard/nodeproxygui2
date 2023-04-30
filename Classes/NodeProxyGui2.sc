@@ -104,8 +104,10 @@ NodeProxyGui2 {
 			);
 		};
 		ndef.addDependant(updateFunc);
+		ndef.monitor.addDependant(updateFunc);
 
 		window.onClose = {
+			ndef.monitor.removeDependant(updateFunc);
 			ndef.removeDependant(updateFunc);
 		};
 	}
