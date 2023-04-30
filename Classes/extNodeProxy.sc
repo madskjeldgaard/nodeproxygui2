@@ -48,6 +48,6 @@
 	}
 
 	gui2{
-		NodeProxyGui2.new(this);
+		^NodeProxyGui2.new(this)
 	}
 }
