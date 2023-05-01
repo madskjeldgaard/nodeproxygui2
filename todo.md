@@ -1,6 +1,5 @@
 # TODO
 
-- Make parameter list / slider section resize when new parameters are defined or old removed in Nodeproxy
 - Write help file
 - Rework ignoreParams -> global/local ignores (look up Ndef.all)
 - Add local ignoreParam toggle to gui
