@@ -36,8 +36,8 @@ NodeProxyGui2 {
 
 		window = Window.new(ndef.key);
 		window.layout = VLayout(
-			[this.makeInfoSection(), s: 1],
-			[this.makeTransportSection(), s: 1],
+			this.makeInfoSection(),
+			this.makeTransportSection(),
 			//parameterSection gets added here in makeParameterSection
 		);
 
@@ -382,7 +382,6 @@ NodeProxyGui2 {
 				view.layout.add(sliderLayout)
 			}
 		};
-		view.layout.add(nil);
 
 		^view
 	}
