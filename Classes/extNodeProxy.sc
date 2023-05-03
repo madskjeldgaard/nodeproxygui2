@@ -39,11 +39,6 @@
 		}
 	}
 
-	vol_ { | val |
-		super.vol_(val);
-		this.changed(\vol, [val]);
-	}
-
 	setDefaults {
 		var params = this.prFilteredParams();
 
@@ -51,6 +46,11 @@
 			var spec = Spec.specs.at(param).asSpec;
 			this.set(param, spec.default)
 		}
+	}
+
+	vol_ { | val |
+		super.vol_(val);
+		this.changed(\vol, [val]);
 	}
 
 	gui2 { | limitUpdateRate = 0 |

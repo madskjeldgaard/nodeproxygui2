@@ -1,6 +1,6 @@
 # TODO
 
-- Write help file
+- Improve help file
 - Rework ignoreParams -> global/local ignores (look up Ndef.all)
 - Add local ignoreParam toggle to gui
 - Add skin/palette selector
@@ -10,6 +10,9 @@
 - gui2's _stop_ is "free" and _free_ is "stop" .. oh my `8=()`
 - add visual indicator (darker grey) on play button state
 - Volume button placement (default + dynamic?)
+- Scroll when too many parameters to fit on screen
+- clear up Font - do we need that many
+- minimize function (or gui3)
 
 ## Add standard gui functionality
 
