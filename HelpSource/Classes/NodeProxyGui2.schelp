@@ -11,8 +11,10 @@ CLASSMETHODS::
 METHOD:: new
 
 ARGUMENT:: nodeproxy
+An link::Classes/Ndef:: instance.
 
 ARGUMENT:: limitUpdateRate
+The higher this value, the slower the interface will update. Set to a non-zero value to reduce the CPU cost of updating GUI elements. In seconds. 0.0 (default) will update instantly and 0.1 ten times per second.
 
 METHOD:: defaultIgnoreParams
 Parameters to be ignored when calling link::#-randomize:: and link::#-vary::.
@@ -28,7 +30,7 @@ At initialisation this array will be populated from defaultIgnoreParams.
 
 INSTANCEMETHODS::
 
-PRIVATE:: init, initFonts
+PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeSliders, ndefChanged, setUpDependencies, setUpParameters
 
 METHOD:: randomize
 Set parameters to random values. This will use the internal link::Classes/ControlSpec:: to figure out the range and ignore parameters in the array link::#*ignoreParams::.
