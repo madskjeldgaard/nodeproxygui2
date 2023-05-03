@@ -4,7 +4,8 @@ NodeProxyGui2 {
 
 	const <defaultIgnoreParams = #["numChannels", "vol", "numOuts", "buffer"];
 
-	var ndef, ndefrate, window, play, numChannels, fadeTime, volslider, volvalueBox;
+	var <window;
+	var ndef, ndefrate, play, numChannels, fadeTime, volslider, volvalueBox;
 	var parameterSection;
 	var sliderDict;
 
@@ -301,6 +302,7 @@ NodeProxyGui2 {
 			parameterSection = ScrollView().canvas_(parameterSection);
 		});
 		window.layout.add(parameterSection);
+
 		window.resizeToHint;
 	}
 

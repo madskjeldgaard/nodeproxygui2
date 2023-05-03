@@ -41,6 +41,10 @@ Set parameters to nearby random values. This will use the internal link::Classes
 argument:: deviation
 In percent.
 
+METHOD:: window
+Get the link::Classes/Window:: instance.
+
+
 EXAMPLES::
 
 code::
