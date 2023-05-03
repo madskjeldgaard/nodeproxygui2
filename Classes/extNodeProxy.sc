@@ -53,7 +53,7 @@
 		}
 	}
 
-	gui2 {
-		^NodeProxyGui2.new(this)
+	gui2 { | limitUpdateRate = 0 |
+		^NodeProxyGui2.new(this, limitUpdateRate)
 	}
 }

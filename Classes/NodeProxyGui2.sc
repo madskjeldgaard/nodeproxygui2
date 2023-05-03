@@ -17,17 +17,19 @@ NodeProxyGui2 {
 	var buttonFont;
 
 	var params;
-	var specUpdateFunc;
+	var ndefChangedFunc, specChangedFunc;
 
 	// this is a normal constructor method
-	*new { | nodeproxy, updateRate = 0.5 |
-		^super.new.init(nodeproxy, updateRate);
+	*new { | nodeproxy, limitUpdateRate = 0 |
+		^super.new.init(nodeproxy, limitUpdateRate)
 	}
 
-	init { | nodeproxy, updateRate |
-		ignoreParams = Set.newFrom(defaultIgnoreParams);
+	init { | nodeproxy, limitUpdateRate |
 		ndef = nodeproxy;
+
 		this.initFonts();
+
+		ignoreParams = Set.newFrom(defaultIgnoreParams);
 		params = IdentityDictionary.new();
 		sliderDict = IdentityDictionary.new();
 
@@ -38,50 +40,18 @@ NodeProxyGui2 {
 			//parameterSection gets added here in makeParameterSection
 		);
 
-		this.setUpDependencies();
+		this.setUpDependencies(limitUpdateRate.max(0));
 
 		this.makeParameterSection();
 
 		window.front;
 	}
 
-	setUpDependencies {
-		var updateFunc, specAddFunc;
+	setUpDependencies { | limitUpdateRate |
+		var limitOrder, limitDict, limitScheduler;
+		var specAddedFunc;
 
-		updateFunc = { | obj ...args |
-			{
-				var key, val, spec;
-				switch(args[0],
-					\set, {
-						key = args[1][0];
-						if(key == \fadeTime, {
-							fadeTime.value = ndef.fadeTime
-						}, {
-							if(params[key].notNil, {
-								val = args[1][1];
-								spec = params[key].value;
-								sliderDict[key][\numBox].value_(spec.constrain(val));
-								sliderDict[key][\slider].value_(spec.unmap(val));
-							})
-						})
-					},
-					\play, {play.value_(1)},
-					\stop, {play.value_(0)},
-					\vol, {
-						val = args[1][0];
-						volvalueBox.value_(val.max(0.0));
-						volslider.value_(val);
-					},
-					\bus, {numChannels.value = args[1].numChannels},
-					\monitor, {ndef.monitor.addDependant(updateFunc)},
-					\rebuild, {ndefrate.value = if(ndef.rate == \audio, 0, 1)},
-					\source, {this.makeParameterSection()},
-				)
-			}.defer
-		};
-		ndef.addDependant(updateFunc);
-
-		specAddFunc = { | obj ...args |
+		specAddedFunc = { | obj ...args |
 			var key, spec;
 			if(args[0] == \add, {
 				key = args[1][0];
@@ -91,18 +61,76 @@ NodeProxyGui2 {
 				})
 			})
 		};
-		Spec.addDependant(specAddFunc);
 
-		specUpdateFunc = { | obj ...args |
+		specChangedFunc = { | obj ...args |
 			{this.setUpParameters()}.defer;
 		};
 
+		ndefChangedFunc = if(limitUpdateRate > 0, {
+			limitOrder = OrderedIdentitySet.new(8);
+			limitDict = IdentityDictionary.new();
+			limitScheduler = SkipJack({
+				if(limitOrder.size > 0, {
+					limitOrder.do{ | key | this.ndefChanged(*limitDict[key])};
+					limitOrder.clear;
+					limitDict.clear;
+				});
+			}, limitUpdateRate, clock: AppClock);
+			{ | obj ...args |
+				var key = args[0];
+				if(key == \set, {
+					key = (key ++ args[1][0]).asSymbol;
+				});
+				limitOrder.add(key);
+				limitDict.put(key, args)
+			}
+		}, {
+			{ | obj ...args | {this.ndefChanged(*args)}.defer}
+		});
+
+		Spec.addDependant(specAddedFunc);
+		ndef.addDependant(ndefChangedFunc);
+		if(ndef.monitor.notNil, {
+			ndef.monitor.addDependant(ndefChangedFunc)
+		});
+
 		window.onClose = {
-			ndef.monitor.removeDependant(updateFunc);
-			ndef.removeDependant(updateFunc);
-			Spec.removeDependant(specAddFunc);
-			params.do{ | spec | spec.removeDependant(specUpdateFunc)};
+			limitScheduler.stop;
+			ndef.monitor.removeDependant(ndefChangedFunc);
+			ndef.removeDependant(ndefChangedFunc);
+			Spec.removeDependant(specAddedFunc);
+			params.do{ | spec | spec.removeDependant(specChangedFunc)};
 		};
+	}
+
+	ndefChanged { | what, args |
+		var key, val, spec;
+		switch(what,
+			\set, {
+				key = args[0];
+				if(key == \fadeTime, {
+					fadeTime.value = args[1]
+				}, {
+					if(params[key].notNil, {
+						val = args[1];
+						spec = params[key].value;
+						sliderDict[key][\numBox].value_(spec.constrain(val));
+						sliderDict[key][\slider].value_(spec.unmap(val));
+					})
+				})
+			},
+			\play, {play.value_(1)},
+			\stop, {play.value_(0)},
+			\vol, {
+				val = args[0];
+				volvalueBox.value_(val.max(0.0));
+				volslider.value_(val);
+			},
+			\bus, {numChannels.value = args.numChannels},
+			\monitor, {ndef.monitor.addDependant(ndefChangedFunc)},
+			\rebuild, {ndefrate.value = if(ndef.rate == \audio, 0, 1)},
+			\source, {this.makeParameterSection()},
+		)
 	}
 
 	makeInfoSection {
@@ -256,13 +284,13 @@ NodeProxyGui2 {
 	}
 
 	setUpParameters {
-		params.do{ | spec | spec.removeDependant(specUpdateFunc)};
+		params.do{ | spec | spec.removeDependant(specChangedFunc)};
 		params.clear;
 
 		ndef.controlKeys.do{ | paramname |
 			var spec = (Spec.specs.at(paramname) ?? {ndef.specs.at(paramname)}).asSpec;
 			//"Spec for paramname %: %".format(paramname, spec).postln;
-			spec.addDependant(specUpdateFunc);
+			spec.addDependant(specChangedFunc);
 			params.put(paramname, spec)
 		};
 
