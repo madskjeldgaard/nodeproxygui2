@@ -296,6 +296,10 @@ NodeProxyGui2 {
 
 		if(parameterSection.notNil, {parameterSection.close});
 		parameterSection = this.makeSliders();
+		parameterSection.resizeToHint;
+		if(parameterSection.bounds.height > (Window.availableBounds.height * 0.5), {
+			parameterSection = ScrollView().canvas_(parameterSection);
+		});
 		window.layout.add(parameterSection);
 		window.resizeToHint;
 	}
@@ -376,6 +380,7 @@ NodeProxyGui2 {
 				view.layout.add(sliderLayout)
 			}
 		};
+		view.layout.add(nil);
 
 		^view
 	}
