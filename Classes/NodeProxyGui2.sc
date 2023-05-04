@@ -5,7 +5,7 @@ NodeProxyGui2 {
 	const <defaultIgnoreParams = #["numChannels", "vol", "numOuts", "buffer"];
 
 	var <window;
-	var ndef, ndefrate, play, numChannels, fadeTime, volslider, volvalueBox;
+	var ndef, play, fadeTime, numChannels, ndefRate, volslider, volvalueBox;
 	var header;
 	var parameterSection;
 	var sliderDict;
@@ -124,45 +124,15 @@ NodeProxyGui2 {
 				volvalueBox.value_(val.max(0.0));
 				volslider.value_(val);
 			},
-			\bus, {numChannels.value = args.numChannels},
+			\bus, {numChannels.string = "channels: %".format(args.numChannels)},
+			\rebuild, {ndefRate.string = "rate: %".format(ndef.rate)},
 			\monitor, {ndef.monitor.addDependant(ndefChangedFunc)},
-			\rebuild, {ndefrate.value = if(ndef.rate == \audio, 0, 1)},
 			\source, {this.makeParameterSection()},
 		)
 	}
 
 	makeInfoSection {
-		var numChannelsLabel, rateLabel, fadeTimeLabel;
-
-		numChannelsLabel = StaticText.new()
-		.string_("channels:");
-
-		numChannels = NumberBox.new()
-		.value_(ndef.numChannels)
-		// .decimals_(0)
-		.action_({ | obj |
-			ndef.mold(obj.value.asInteger, ndef.rate)
-		});
-
-		// numChannels = StaticText.new()
-		// .string_(ndef.numChannels);
-
-		rateLabel = StaticText.new()
-		.string_("rate:");
-
-		// ndefrate = StaticText.new()
-		// .string_(ndef.rate);
-
-		ndefrate = Button.new()
-		.states_(#[
-			["audio"],
-			["control"]
-		])
-		.action_({ | obj |
-			var index = obj.value;
-			var newrate = obj.states[index][0].asSymbol;
-			ndef.mold(ndef.numChannels, newrate)
-		});
+		var fadeTimeLabel;
 
 		fadeTimeLabel = StaticText.new()
 		.string_("fadeTime:");
@@ -177,13 +147,17 @@ NodeProxyGui2 {
 			ndef.fadeTime = obj.value;
 		});
 
+		numChannels = StaticText.new()
+		.string_("channels: %".format(ndef.numChannels));
+
+		ndefRate = StaticText.new()
+		.string_("rate: %".format(ndef.rate));
+
 		header = StaticText.new().string_(ndef.key);
 
 		^VLayout(
 			header,
-			HLayout([numChannelsLabel, s: 1], [numChannels, s: 1, a: \left]),
-			HLayout([rateLabel, s: 1], [ndefrate, s: 1, a: \left]),
-			HLayout([fadeTimeLabel, s: 1], [fadeTime, s: 1, a: \left]),
+			HLayout(fadeTimeLabel, [fadeTime, a: \left], numChannels, ndefRate),
 		)
 	}
 
@@ -379,7 +353,7 @@ NodeProxyGui2 {
 		var fontSize, headerFontSize;
 
 		fontSize = 14;
-		headerFontSize = fontSize;
+		headerFontSize = fontSize * 2;
 		headerFont = Font.sansSerif(headerFontSize, bold: true, italic: false);
 		font = Font.monospace(fontSize, bold: false, italic: false);
 	}
@@ -392,8 +366,8 @@ NodeProxyGui2 {
 		ndef.varyAllParamsMapped(deviation)
 	}
 
-    close{
-        ^window.close();
-    }
+	close{
+		^window.close();
+	}
 
 }
