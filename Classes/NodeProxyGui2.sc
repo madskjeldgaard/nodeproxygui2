@@ -253,8 +253,8 @@ NodeProxyGui2 {
 		.font_(buttonFont);
 
 		popup = PopUpMenu()
+		.allowsReselection_(true)
 		.items_(#[
-			" ",
 			"defaults",
 			"randomize parameters",
 			"vary parameters",
@@ -263,13 +263,12 @@ NodeProxyGui2 {
 		])
 		.action_({ | obj |
 			switch(obj.value,
-				1, {ndef.setDefaults()},
-				2, {this.randomize()},
-				3, {this.vary()},
-				4, {ndef.document},
-				5, {ndef.asCode.postln},
+				0, {ndef.setDefaults()},
+				1, {this.randomize()},
+				2, {this.vary()},
+				3, {ndef.document},
+				4, {ndef.asCode.postln},
 			);
-			obj.value = 0;
 		})
 		.canFocus_(true)
 		.fixedWidth_(25)
