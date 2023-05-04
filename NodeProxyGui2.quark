@@ -1,11 +1,11 @@
 (
   name: "nodeproxygui2",
-  summary: "Providing a modern alternative to the NodeProxy gui",
+  summary: "A modern alternative to the NodeProxy gui",
   version: "0.001",
   schelp: "NodeProxyGui2.schelp",
   dependencies: [],
   license: "GNU GPL v3.0",
-  copyright: "madskjeldgaard",
+  copyright: "Mads Kjeldgaard, Fredrik Olofsson, Niklas Adam",
   ext_dependency: "",
   url: "https://github.com/madskjeldgaard/nodeproxygui2"
 )
