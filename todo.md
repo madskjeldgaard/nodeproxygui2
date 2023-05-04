@@ -6,7 +6,6 @@
 - gui2's _stop_ is "free" and _free_ is "stop" .. oh my `8=()`
 - add visual indicator (darker grey) on play button state
 - Volume button placement (default + dynamic?)
-- clear up Font - do we need that many
 - minimize function (or gui3)
 
 ## Bugs
