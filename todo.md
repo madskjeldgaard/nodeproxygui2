@@ -5,6 +5,7 @@
 - Minimize function (or gui3)
 
 ## Bugs
+- PopUp stays open when tabbing away from sc application (bug in scqt)
 
 ## Features 
 - Make A/B buttons to allow A/B testing two different parameter sets
@@ -19,5 +20,4 @@
   Do it the way std .gui does it?
 - Decide which toggle ndef state logic variant should be the gui's start/end sound button (`play/stop`, `play/free`, `play/stop(fadeTime)`)
 - New gif in README
-- Instance ignore param toggle
 - v1.0 in quarkfile
