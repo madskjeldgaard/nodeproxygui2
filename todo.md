@@ -1,11 +1,18 @@
 # TODO
 
 ## Improvements
-- Slider placement for ".vol" (default + dynamic?)
+- Slider placement for "vol" (default + dynamic?)
 - Minimize function (or gui3)
 
 ## Bugs
-- PopUp stays open when tabbing away from sc application (bug in scqt)
+- PopUp stays open when tabbing away from sc application (bug in scqt) **MacOs**
+- wildcard ignoreParams applying also without *
+```
+NodeProxyGui2.defaultIgnoreParams_(["freq*"])
+NodeProxyGui2.defaultIgnoreParams_(["freq"])
+NodeProxyGui2.defaultIgnoreParams_(["f"])
+// same result
+```
 
 ## Features 
 - Make A/B buttons to allow A/B testing two different parameter sets
