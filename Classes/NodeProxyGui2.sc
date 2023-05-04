@@ -258,17 +258,22 @@ NodeProxyGui2 {
 			"defaults",
 			"randomize parameters",
 			"vary parameters",
+			"document",
+			"post",
 		])
 		.action_({ | obj |
 			switch(obj.value,
 				1, {ndef.setDefaults()},
 				2, {this.randomize()},
 				3, {this.vary()},
+				4, {ndef.document},
+				5, {ndef.asCode.postln},
 			);
 			obj.value = 0;
 		})
-		.font_(buttonFont)
-		.fixedWidth_(25);
+		.canFocus_(true)
+		.fixedWidth_(25)
+		.font_(buttonFont);
 
 		^HLayout(
 			play, clear, free, scope, send, popup
