@@ -7,7 +7,7 @@ DESCRIPTION::
 
 NodeProxyGui2 is a modernized alternative to the classic NodeProxy/Ndef gui
 available in SuperCollider. It fixes a number of problems with the old gui,
-improves some things and adds a few handy new features to it's set.
+improves some things and adds a few handy new features to its set.
 
 The main motivation behind it is to create a gui that is:
 
@@ -53,6 +53,9 @@ Set parameters to nearby random values. This will use the internal link::Classes
 argument:: deviation
 In percent.
 
+METHOD:: close
+Closes the window.
+
 METHOD:: window
 Get the link::Classes/Window:: instance.
 
@@ -61,7 +64,7 @@ EXAMPLES::
 
 code::
 (
-Ndef(\yiyi, {|freq=100, amp=0.5, pan=0|
+Ndef(\yiyi, {|freq=300, amp=0.5, pan=0|
 	Pan2.ar(SinOsc.ar(freq), pos: pan, level: amp)
 });
 )
