@@ -270,6 +270,11 @@ NodeProxyGui2 {
 				4, {ndef.asCode.postln},
 			);
 		})
+		.keyDownAction_({ | obj, char |
+			if(char == Char.ret, {
+				obj.doAction
+			})
+		})
 		.canFocus_(true)
 		.fixedWidth_(25)
 		.font_(buttonFont);
