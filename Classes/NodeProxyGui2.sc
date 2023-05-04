@@ -6,16 +6,11 @@ NodeProxyGui2 {
 
 	var <window;
 	var ndef, ndefrate, play, numChannels, fadeTime, volslider, volvalueBox;
+	var header;
 	var parameterSection;
 	var sliderDict;
 
-	var headerFont;
-
-	var labelFont;
-	var infolabelFont;
-
-	var valueFont;
-	var buttonFont;
+	var font, headerFont;
 
 	var params;
 	var ndefChangedFunc, specChangedFunc;
@@ -40,6 +35,8 @@ NodeProxyGui2 {
 			this.makeTransportSection(),
 			//parameterSection gets added here in makeParameterSection
 		);
+		window.view.children.do{ | x | x.font = font};
+		header.font = headerFont;
 
 		this.setUpDependencies(limitUpdateRate.max(0));
 
@@ -135,31 +132,26 @@ NodeProxyGui2 {
 	}
 
 	makeInfoSection {
-		var numChannelsLabel, rateLabel, fadeTimeLabel, header;
+		var numChannelsLabel, rateLabel, fadeTimeLabel;
 
 		numChannelsLabel = StaticText.new()
-		.string_("channels:")
-		.font_(infolabelFont);
+		.string_("channels:");
 
 		numChannels = NumberBox.new()
 		.value_(ndef.numChannels)
 		// .decimals_(0)
 		.action_({ | obj |
 			ndef.mold(obj.value.asInteger, ndef.rate)
-		})
-		.font_(valueFont);
+		});
 
 		// numChannels = StaticText.new()
-		// .string_(ndef.numChannels)
-		// .font_(valueFont);
+		// .string_(ndef.numChannels);
 
 		rateLabel = StaticText.new()
-		.string_("rate:")
-		.font_(infolabelFont);
+		.string_("rate:");
 
 		// ndefrate = StaticText.new()
-		// .string_(ndef.rate)
-		// .font_(valueFont);
+		// .string_(ndef.rate);
 
 		ndefrate = Button.new()
 		.states_(#[
@@ -170,12 +162,10 @@ NodeProxyGui2 {
 			var index = obj.value;
 			var newrate = obj.states[index][0].asSymbol;
 			ndef.mold(ndef.numChannels, newrate)
-		})
-		.font_(infolabelFont);
+		});
 
 		fadeTimeLabel = StaticText.new()
-		.string_("fadeTime:")
-		.font_(infolabelFont);
+		.string_("fadeTime:");
 
 		fadeTime = NumberBox.new()
 		.clipLo_(0.0)
@@ -185,10 +175,9 @@ NodeProxyGui2 {
 		.value_(ndef.fadeTime)
 		.action_({ | obj |
 			ndef.fadeTime = obj.value;
-		})
-		.font_(valueFont);
+		});
 
-		header = StaticText.new().string_(ndef.key).font_(headerFont);
+		header = StaticText.new().string_(ndef.key);
 
 		^VLayout(
 			header,
@@ -206,7 +195,6 @@ NodeProxyGui2 {
 			["play"],
 			["stop"]
 		])
-		.font_(buttonFont)
 		.action_({ | obj |
 			if(obj.value == 1, {
 				ndef.play;
@@ -222,8 +210,7 @@ NodeProxyGui2 {
 		])
 		.action_({ | obj |
 			ndef.clear
-		})
-		.font_(buttonFont);
+		});
 
 		send = Button.new()
 		.states_(#[
@@ -231,8 +218,7 @@ NodeProxyGui2 {
 		])
 		.action_({ | obj |
 			ndef.send
-		})
-		.font_(buttonFont);
+		});
 
 		scope = Button.new()
 		.states_(#[
@@ -240,8 +226,7 @@ NodeProxyGui2 {
 		])
 		.action_({ | obj |
 			ndef.scope
-		})
-		.font_(buttonFont);
+		});
 
 		free = Button.new()
 		.states_(#[
@@ -249,8 +234,7 @@ NodeProxyGui2 {
 		])
 		.action_({ | obj |
 			ndef.free;
-		})
-		.font_(buttonFont);
+		});
 
 		popup = PopUpMenu()
 		.allowsReselection_(true)
@@ -276,8 +260,7 @@ NodeProxyGui2 {
 			})
 		})
 		.canFocus_(true)
-		.fixedWidth_(25)
-		.font_(buttonFont);
+		.fixedWidth_(25);
 
 		^HLayout(
 			play, clear, free, scope, send, popup
@@ -330,8 +313,7 @@ NodeProxyGui2 {
 
 		// Label
 		vollabel = StaticText.new
-		.string_("volume")
-		.font_(labelFont);
+		.string_("volume");
 
 		// Value box
 		volvalueBox = NumberBox.new()
@@ -341,8 +323,7 @@ NodeProxyGui2 {
 			volslider.value_(obj.value);
 			ndef.vol_(obj.value);
 		})
-		.value_(ndef.vol)
-		.font_(valueFont);
+		.value_(ndef.vol);
 
 		volLayout = HLayout([vollabel, s: 1], [volvalueBox, s: 1], [volslider, s: 4]);
 		view.layout.add(volLayout);
@@ -368,8 +349,7 @@ NodeProxyGui2 {
 
 				// Label
 				label = StaticText.new
-				.string_(pName)
-				.font_(labelFont);
+				.string_(pName);
 
 				// Value box
 				valueBox = NumberBox.new()
@@ -379,8 +359,7 @@ NodeProxyGui2 {
 					ndef.set(pName, obj.value);
 				})
 				.decimals_(4)
-				.value_(spec.constrain(paramVal))
-				.font_(valueFont);
+				.value_(spec.constrain(paramVal));
 
 				// Slider Layout
 				sliderLayout = HLayout([label, s: 1], [valueBox, s: 1], [slider, s: 4]);
@@ -391,6 +370,7 @@ NodeProxyGui2 {
 				view.layout.add(sliderLayout)
 			}
 		};
+		view.children.do{ | x | x.font = font};
 
 		^view
 	}
@@ -401,10 +381,7 @@ NodeProxyGui2 {
 		fontSize = 14;
 		headerFontSize = fontSize;
 		headerFont = Font.sansSerif(headerFontSize, bold: true, italic: false);
-		labelFont = Font.monospace(fontSize, bold: false, italic: false);
-		infolabelFont = Font.monospace(fontSize, bold: false, italic: false);
-		valueFont = Font.monospace(fontSize, bold: false, italic: false);
-		buttonFont = Font.monospace(fontSize, bold: false, italic: false);
+		font = Font.monospace(fontSize, bold: false, italic: false);
 	}
 
 	randomize {
