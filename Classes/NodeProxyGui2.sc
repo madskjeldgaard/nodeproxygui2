@@ -139,7 +139,7 @@ NodeProxyGui2 {
 
 		fadeTime = NumberBox.new()
 		.clipLo_(0.0)
-		.decimals_(4)
+		.decimals_(2)
 		.scroll_step_(0.1) // mouse
 		.step_(0.1)        // keys
 		.value_(ndef.fadeTime)
