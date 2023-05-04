@@ -36,8 +36,8 @@ NodeProxyGui2 {
 
 		window = Window.new(ndef.key);
 		window.layout = VLayout(
-			[this.makeInfoSection(), s: 1],
-			[this.makeTransportSection(), s: 1],
+			this.makeInfoSection(),
+			this.makeTransportSection(),
 			//parameterSection gets added here in makeParameterSection
 		);
 
