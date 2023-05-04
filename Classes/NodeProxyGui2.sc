@@ -36,8 +36,8 @@ NodeProxyGui2 {
 
 		window = Window.new(ndef.key);
 		window.layout = VLayout(
-			this.makeInfoSection(),
-			this.makeTransportSection(),
+			[this.makeInfoSection(), s: 1],
+			[this.makeTransportSection(), s: 1],
 			//parameterSection gets added here in makeParameterSection
 		);
 
@@ -305,7 +305,7 @@ NodeProxyGui2 {
 		if(parameterSection.bounds.height > (Window.availableBounds.height * 0.5), {
 			parameterSection = ScrollView().canvas_(parameterSection);
 		});
-		window.layout.add(parameterSection);
+		window.layout.add(parameterSection, 1);
 
 		window.resizeToHint;
 	}
