@@ -5,6 +5,18 @@ related:: Classes/NdefGui, Classes/NdefParamGui
 
 DESCRIPTION::
 
+NodeProxyGui2 is a modernized alternative to the classic NodeProxy/Ndef gui
+available in SuperCollider. It fixes a number of problems with the old gui,
+improves some things and adds a few handy new features to it's set.
+
+The main motivation behind it is to create a gui that is:
+
+- Readable (labels have a readable font size on modern displays and do not get
+"cut off" if overflowing because of long names)
+- Has a tight integration with local and global link::Classes/ControlSpec::s,
+and if no spec is found for a parameter, it has a reasonable fallback (assuming
+it is a parameter with the range 0.0 to 1.0)
+- Has user scaleable layout – GUI elements resize with window size.
 
 CLASSMETHODS::
 
