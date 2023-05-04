@@ -406,4 +406,8 @@ NodeProxyGui2 {
 		ndef.varyAllParamsMapped(deviation)
 	}
 
+    close{
+        ^window.close();
+    }
+
 }
