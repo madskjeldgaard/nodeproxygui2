@@ -66,11 +66,15 @@ Ndef(\yiyi, {|freq=100, amp=0.5, pan=0|
 });
 )
 
-Ndef(\yiyi).gui2;
+// .gui2 returns the gui, allowing you to further manipulate it later on, or simply close it
+g = Ndef(\yiyi).gui2;
 
 // dont randomize ignored parameters
 Ndef(\yiyi).randomizeAllParamsMapped;
 NodeProxyGui2.ignoreParams.add("amp");
 Ndef(\yiyi).randomizeAllParamsMapped;
 NodeProxyGui2.ignoreParams.remove("amp");
+
+// Close the gui
+g.close();
 ::
