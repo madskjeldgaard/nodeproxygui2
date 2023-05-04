@@ -1,9 +1,8 @@
 NodeProxyGui2 {
 
-	classvar <>ignoreParams;
+	classvar <>defaultIgnoreParams = #[];
 
-	const <defaultIgnoreParams = #[".vol"];
-
+	var <>ignoreParams;
 	var <window;
 	var ndef, play, fadeTime, numChannels, ndefRate, volslider, volvalueBox;
 	var header;
@@ -25,7 +24,6 @@ NodeProxyGui2 {
 
 		this.initFonts();
 
-		ignoreParams = Set.newFrom(defaultIgnoreParams);
 		params = IdentityDictionary.new();
 		sliderDict = IdentityDictionary.new();
 
@@ -119,7 +117,7 @@ NodeProxyGui2 {
 			},
 			\play, {play.value_(1)},
 			\stop, {play.value_(0)},
-			'.vol', {
+			\vol, {
 				val = args[0];
 				volvalueBox.value_(val.max(0.0));
 				volslider.value_(val);
@@ -287,7 +285,7 @@ NodeProxyGui2 {
 
 		// Label
 		vollabel = StaticText.new
-		.string_(".vol");
+		.string_("vol");
 
 		// Value box
 		volvalueBox = NumberBox.new()
@@ -358,12 +356,14 @@ NodeProxyGui2 {
 		font = Font.monospace(fontSize, bold: false, italic: false);
 	}
 
-	randomize {
-		ndef.randomizeAllParamsMapped(0.0, 1.0);
+	randomize { | randmin = 0.0, randmax = 1.0, except = #[] |
+		except = defaultIgnoreParams ++ ignoreParams ++ except;
+		ndef.randomizeAllParamsMapped(randmin, randmax, except)
 	}
 
-	vary { | deviation = 0.1 |
-		ndef.varyAllParamsMapped(deviation)
+	vary { | deviation = 0.1, except = #[] |
+		except = defaultIgnoreParams ++ ignoreParams ++ except;
+		ndef.varyAllParamsMapped(deviation, except)
 	}
 
 	close {

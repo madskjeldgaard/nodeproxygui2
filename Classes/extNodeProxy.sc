@@ -1,24 +1,20 @@
 + NodeProxy {
 
-	prFilteredParams {
-		var ignoreParams = NodeProxyGui2.ignoreParams.asArray ++ NodeProxyGui2.defaultIgnoreParams;
+	prFilteredParams { | except |
+		except = except.asArray;
 
 		^this.controlKeys.reject({ | paramName |
 
-			var predicate = ignoreParams.any{ | ignoreParam |
-				ignoreParam.matchRegexp(paramName.asString)
+			var predicate = except.any{ | ignoreParam |
+				ignoreParam.asString.matchRegexp(paramName.asString)
 			};
-
-			// if(predicate){
-			//     ("Ignoring param: " ++ paramName ++ " because it matches ignoreparams" ).postln
-			// };
 
 			predicate
 		})
 	}
 
-	randomizeAllParamsMapped { | randmin = 0.0, randmax = 1.0 |
-		var params = this.prFilteredParams();
+	randomizeAllParamsMapped { | randmin = 0.0, randmax = 1.0, except = #[] |
+		var params = this.prFilteredParams(except);
 
 		params.do{ | param |
 			var val = rrand(randmin, randmax);
@@ -28,8 +24,8 @@
 		}
 	}
 
-	varyAllParamsMapped { | deviation = 0.1 |
-		var params = this.prFilteredParams();
+	varyAllParamsMapped { | deviation = 0.1, except = #[] |
+		var params = this.prFilteredParams(except);
 
 		params.do{ | param |
 			var val = this.get(param);
@@ -39,8 +35,8 @@
 		}
 	}
 
-	setDefaults {
-		var params = this.prFilteredParams();
+	setDefaults { | except = #[] |
+		var params = this.prFilteredParams(except);
 
 		params.do{ | param |
 			var spec = Spec.specs.at(param).asSpec;

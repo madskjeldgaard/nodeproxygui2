@@ -30,28 +30,36 @@ The higher this value, the slower the interface will update. Set to a non-zero v
 
 METHOD:: defaultIgnoreParams
 Parameters to be ignored when calling link::#-randomize:: and link::#-vary::.
-code::
-NodeProxyGui2.defaultIgnoreParams;
--> [ .vol ]
-::
 
-METHOD:: ignoreParams
-Get or set the parameters to be ignored when calling link::#-randomize:: and link::#-vary::.
-This should be an link::Classes/Array:: with strings.
-At initialisation this array will be populated from defaultIgnoreParams.
 
 INSTANCEMETHODS::
 
 PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeSliders, ndefChanged, setUpDependencies, setUpParameters
 
+METHOD:: ignoreParams
+Get or set the parameters to be ignored when calling link::#-randomize:: and link::#-vary:: on this instance.
+This should be an link::Classes/Array:: with strings or symbols. Strings can be regular expressions like code::*:: for wildcard.
+
 METHOD:: randomize
-Set parameters to random values. This will use the internal link::Classes/ControlSpec:: to figure out the range and ignore parameters in the array link::#*ignoreParams::.
+Set parameters to random values. This will use the internal link::Classes/ControlSpec:: to figure out the range.
+
+argument:: randmin
+A link::Classes/Float::.
+
+argument:: randmax
+A link::Classes/Float::.
+
+argument:: except
+An link::Classes/Array:: of symbols or strings specifying which parameters to exclude. See link::Classes/NodeProxy#-controlKeys::.
 
 METHOD:: vary
-Set parameters to nearby random values. This will use the internal link::Classes/ControlSpec:: to figure out the range and ignore parameters in the array link::#*ignoreParams::.
+Set parameters to nearby random values - gaussian distribution. This will use the internal link::Classes/ControlSpec:: to figure out the range.
 
 argument:: deviation
 In percent.
+
+argument:: except
+An link::Classes/Array:: of symbols or strings specifying which parameters to exclude. See link::Classes/NodeProxy#-controlKeys::.
 
 METHOD:: close
 Closes the window.
@@ -72,11 +80,13 @@ Ndef(\yiyi, {|freq=300, amp=0.5, pan=0|
 // .gui2 returns the gui, allowing you to further manipulate it later on, or simply close it
 g = Ndef(\yiyi).gui2;
 
-// dont randomize ignored parameters
 Ndef(\yiyi).randomizeAllParamsMapped;
-NodeProxyGui2.ignoreParams.add("amp");
-Ndef(\yiyi).randomizeAllParamsMapped;
-NodeProxyGui2.ignoreParams.remove("amp");
+
+// don't randomize excluded parameters
+Ndef(\yiyi).randomizeAllParamsMapped(except: [\amp]);
+// or similar
+g.ignoreParams = [\amp];
+g.randomize;
 
 // Close the gui
 g.close();
