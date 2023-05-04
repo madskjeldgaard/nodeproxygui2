@@ -2,7 +2,7 @@
   name: "nodeproxygui2",
   summary: "A modern alternative to the NodeProxy gui",
   version: "0.001",
-  schelp: "NodeProxyGui2.schelp",
+  schelp: "NodeProxyGui2",
   dependencies: [],
   license: "GNU GPL v3.0",
   copyright: "Mads Kjeldgaard, Fredrik Olofsson, Niklas Adam",
