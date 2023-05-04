@@ -32,7 +32,7 @@ METHOD:: defaultIgnoreParams
 Parameters to be ignored when calling link::#-randomize:: and link::#-vary::.
 code::
 NodeProxyGui2.defaultIgnoreParams;
--> [ numChannels, vol, numOuts, buffer ]
+-> [ .vol ]
 ::
 
 METHOD:: ignoreParams

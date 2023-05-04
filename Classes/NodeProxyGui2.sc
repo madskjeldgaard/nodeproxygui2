@@ -2,7 +2,7 @@ NodeProxyGui2 {
 
 	classvar <>ignoreParams;
 
-	const <defaultIgnoreParams = #["numChannels", "vol", "numOuts", "buffer"];
+	const <defaultIgnoreParams = #[".vol"];
 
 	var <window;
 	var ndef, ndefrate, play, numChannels, fadeTime, volslider, volvalueBox;
@@ -119,7 +119,7 @@ NodeProxyGui2 {
 			},
 			\play, {play.value_(1)},
 			\stop, {play.value_(0)},
-			\vol, {
+			'.vol', {
 				val = args[0];
 				volvalueBox.value_(val.max(0.0));
 				volslider.value_(val);
@@ -313,7 +313,7 @@ NodeProxyGui2 {
 
 		// Label
 		vollabel = StaticText.new
-		.string_("volume");
+		.string_(".vol");
 
 		// Value box
 		volvalueBox = NumberBox.new()
