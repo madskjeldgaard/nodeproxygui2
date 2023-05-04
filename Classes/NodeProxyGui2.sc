@@ -199,7 +199,7 @@ NodeProxyGui2 {
 	}
 
 	makeTransportSection {
-		var clear, send, scope, free, randomizeParams, defaultsButton;
+		var clear, send, scope, free, popup;
 
 		play = Button.new()
 		.states_(#[
@@ -252,26 +252,30 @@ NodeProxyGui2 {
 		})
 		.font_(buttonFont);
 
-		randomizeParams = Button.new()
-		.states_(#[
-			["randomize"]
+		popup = PopUpMenu()
+		.allowsReselection_(true)
+		.items_(#[
+			"defaults",
+			"randomize parameters",
+			"vary parameters",
+			"document",
+			"post",
 		])
 		.action_({ | obj |
-			this.randomize()
+			switch(obj.value,
+				0, {ndef.setDefaults()},
+				1, {this.randomize()},
+				2, {this.vary()},
+				3, {ndef.document},
+				4, {ndef.asCode.postln},
+			);
 		})
-		.font_(buttonFont);
-
-		defaultsButton = Button.new()
-		.states_(#[
-			["defaults"]
-		])
-		.action_({ | obj |
-			ndef.setDefaults()
-		})
+		.canFocus_(true)
+		.fixedWidth_(25)
 		.font_(buttonFont);
 
 		^HLayout(
-			play, clear, free, scope, send, randomizeParams, defaultsButton
+			play, clear, free, scope, send, popup
 		)
 	}
 
