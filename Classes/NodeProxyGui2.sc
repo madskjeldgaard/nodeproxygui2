@@ -30,7 +30,7 @@ NodeProxyGui2 {
 		sliderDict = IdentityDictionary.new();
 
 		window = Window.new(ndef.key);
-		window.layout = VLayout(
+		window.layout = VLayout.new(
 			this.makeInfoSection(),
 			this.makeTransportSection(),
 			// parameterSection gets added here in makeParameterSection
@@ -82,12 +82,13 @@ NodeProxyGui2 {
 					key = (key ++ args[1][0]).asSymbol;
 				});
 				limitOrder.add(key);
-				limitDict.put(key, args)
+				limitDict.put(key, args);
 			}
 
 		}, {
 
 			{ | obj ...args | { this.ndefChanged(*args) }.defer }
+
 		});
 
 		Spec.addDependant(specAddedFunc);
@@ -107,6 +108,7 @@ NodeProxyGui2 {
 
 	ndefChanged { | what, args |
 		var key, val, spec;
+
 		switch(what,
 			\set, {
 				key = args[0];
@@ -159,9 +161,9 @@ NodeProxyGui2 {
 
 		header = StaticText.new().string_(ndef.key);
 
-		^VLayout(
+		^VLayout.new(
 			header,
-			HLayout(fadeTimeLabel, [fadeTime, a: \left], numChannels, ndefRate),
+			HLayout.new(fadeTimeLabel, [fadeTime, a: \left], numChannels, ndefRate),
 		)
 	}
 
@@ -171,11 +173,11 @@ NodeProxyGui2 {
 		play = Button.new()
 		.states_([
 			["play"],
-			["stop", Color.black, Color.grey(0.5, 0.5)]
+			["stop", Color.black, Color.grey(0.5, 0.5)],
 		])
 		.action_({ | obj |
 			if(obj.value == 1, {
-				ndef.play;
+				ndef.play
 			}, {
 				ndef.stop
 			})
@@ -211,10 +213,10 @@ NodeProxyGui2 {
 			["free"]
 		])
 		.action_({ | obj |
-			ndef.free;
+			ndef.free
 		});
 
-		popup = PopUpMenu()
+		popup = PopUpMenu.new()
 		.allowsReselection_(true)
 		.items_(#[
 			"defaults",
@@ -230,7 +232,7 @@ NodeProxyGui2 {
 				2, { this.vary() },
 				3, { ndef.document },
 				4, { ndef.asCode.postln },
-			);
+			)
 		})
 		.keyDownAction_({ | obj, char |
 			if(char == Char.ret, {
@@ -240,7 +242,7 @@ NodeProxyGui2 {
 		.canFocus_(true)
 		.fixedWidth_(25);
 
-		^HLayout(
+		^HLayout.new(
 			play, clear, free, scope, send, popup
 		)
 	}
@@ -252,7 +254,7 @@ NodeProxyGui2 {
 		if(paramKeys.size != ndefKeys.size or: {
 			paramKeys.includesAll(ndefKeys).not
 		}, {
-			this.setUpParameters();
+			this.setUpParameters()
 		});
 	}
 
@@ -264,14 +266,14 @@ NodeProxyGui2 {
 			var spec = (Spec.specs.at(paramname) ?? { ndef.specs.at(paramname) }).asSpec;
 			//"Spec for paramname %: %".format(paramname, spec).postln;
 			spec.addDependant(specChangedFunc);
-			params.put(paramname, spec)
+			params.put(paramname, spec);
 		};
 
 		if(parameterSection.notNil, { parameterSection.close });
 		parameterSection = this.makeSliders();
 		parameterSection.resizeToHint;
 		if(parameterSection.bounds.height > (Window.availableBounds.height * 0.5), {
-			parameterSection = ScrollView().canvas_(parameterSection);
+			parameterSection = ScrollView.new().canvas_(parameterSection);
 		});
 		window.layout.add(parameterSection, 1);
 
@@ -281,7 +283,7 @@ NodeProxyGui2 {
 	makeSliders {
 		var view, vollabel, volLayout;
 
-		view = View().layout_(VLayout());
+		view = View.new().layout_(VLayout.new());
 
 		volslider = Slider.new()
 		.orientation_(\horizontal)
@@ -305,7 +307,7 @@ NodeProxyGui2 {
 		})
 		.value_(ndef.vol);
 
-		volLayout = HLayout(
+		volLayout = HLayout.new(
 			[vollabel, s: 1],
 			[volvalueBox, s: 1],
 			[volslider, s: 4],
@@ -322,7 +324,6 @@ NodeProxyGui2 {
 				// Slider
 				paramVal = ndef.get(pName);
 				slider = Slider.new()
-				// .step_(spec.step)
 				.orientation_(\horizontal)
 				.value_(spec.unmap(paramVal))
 				.action_({ | obj |
@@ -346,7 +347,7 @@ NodeProxyGui2 {
 				.value_(spec.constrain(paramVal));
 
 				// Slider Layout
-				sliderLayout = HLayout(
+				sliderLayout = HLayout.new(
 					[label, s: 1],
 					[valueBox, s: 1],
 					[slider, s: 4],
