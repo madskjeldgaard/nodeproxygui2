@@ -163,9 +163,9 @@ NodeProxyGui2 {
 		var clear, send, scope, free, popup;
 
 		play = Button.new()
-		.states_(#[
+		.states_([
 			["play"],
-			["stop"]
+			["stop", Color.black, Color.grey(0.5, 0.5)]
 		])
 		.action_({ | obj |
 			if(obj.value == 1, {
