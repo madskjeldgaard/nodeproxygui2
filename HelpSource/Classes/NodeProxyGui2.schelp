@@ -38,7 +38,7 @@ PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterS
 
 METHOD:: ignoreParams
 Get or set the parameters to be ignored when calling link::#-randomize:: and link::#-vary:: on this instance.
-This should be an link::Classes/Array:: with strings or symbols. Strings can be regular expressions like code::*:: for wildcard.
+This should be an link::Classes/Array:: with strings or symbols.
 
 METHOD:: randomize
 Set parameters to random values. This will use the internal link::Classes/ControlSpec:: to figure out the range.

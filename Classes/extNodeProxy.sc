@@ -1,46 +1,77 @@
 + NodeProxy {
 
 	prFilteredParams { | except |
-		except = except.asArray;
+		var accepted = IdentityDictionary.new;
 
-		^this.controlKeys.reject({ | paramName |
+		except = except.asArray.collect{ | param | param.asSymbol };
 
-			var predicate = except.any{ | ignoreParam |
-				ignoreParam.asString.matchRegexp(paramName.asString)
-			};
+		this.controlKeysValues.pairsDo({ | key, val |
+			var ignore;
 
-			predicate
-		})
+			ignore = except.any{ | ignoreParam | ignoreParam == key };
+			if(ignore.not, {
+				if(val.isNumber, {
+					accepted.put(key, Spec.specs.at(key).asSpec)
+				}, {
+					if(val.isArray, {
+						accepted.put(key, Spec.specs.at(key).asSpec.dup(val.size))
+					})
+					// Buffer and Bus values are ignored
+				})
+			})
+		});
+
+		^accepted
 	}
 
 	randomizeAllParamsMapped { | randmin = 0.0, randmax = 1.0, except = #[] |
 		var params = this.prFilteredParams(except);
 
-		params.do{ | param |
-			var val = rrand(randmin, randmax);
-			var spec = Spec.specs.at(param).asSpec;
-			val = spec.map(val);
-			this.set(param, val)
+		params.keysValuesDo{ | key, spec |
+			var val;
+
+			if(spec.isArray, {
+				val = spec.collect(_.map(rrand(randmin, randmax)))
+			}, {
+				val = spec.map(rrand(randmin, randmax))
+			});
+
+			this.set(key, val)
 		}
 	}
 
-	varyAllParamsMapped { | deviation = 0.1, except = #[] |
+	varyAllParamsMapped { | deviation = 0.05, except = #[] |
 		var params = this.prFilteredParams(except);
 
-		params.do{ | param |
-			var val = this.get(param);
-			var spec = Spec.specs.at(param).asSpec;
-			val = (spec.unmap(val) + 0.0.gauss(deviation)).clip(0, 1);
-			this.set(param, spec.map(val))
+		params.keysValuesDo{ | key, spec |
+			var val = this.get(key);
+
+			if(spec.isArray, {
+				val = spec.collect{ | s, i |
+					s.map((s.unmap(val[i]) + 0.0.gauss(deviation)).clip(0, 1))
+				}
+			}, {
+				val = spec.unmap(val) + 0.0.gauss(deviation);
+				val = spec.map(val.clip(0, 1))
+			});
+
+			this.set(key, val)
 		}
 	}
 
 	setDefaults { | except = #[] |
 		var params = this.prFilteredParams(except);
 
-		params.do{ | param |
-			var spec = Spec.specs.at(param).asSpec;
-			this.set(param, spec.default)
+		params.keysValuesDo{ | key, spec |
+			var val;
+
+			if(spec.isArray, {
+				val = spec.collect(_.default)
+			}, {
+				val = spec.default
+			});
+
+			this.set(key, val)
 		}
 	}
 
