@@ -253,7 +253,7 @@ NodeProxyGui2 {
 		])
 		.action_({ | obj |
 			switch(obj.value,
-				0, { ndef.setDefaults() },
+				0, { this.defaults() },
 				1, { this.randomize() },
 				2, { this.vary() },
 				3, { ndef.document },
@@ -478,6 +478,11 @@ NodeProxyGui2 {
 	vary { | deviation = 0.1, except = #[] |
 		except = defaultIgnoreParams ++ ignoreParams ++ except;
 		ndef.varyAllParamsMapped(deviation, except)
+	}
+
+	defaults { | except = #[] |
+		except = defaultIgnoreParams ++ ignoreParams ++ except;
+		ndef.setDefaults(except)
 	}
 
 	close {
