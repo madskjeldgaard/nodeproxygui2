@@ -34,7 +34,7 @@ Parameters to be ignored when calling link::#-randomize:: and link::#-vary::.
 
 INSTANCEMETHODS::
 
-PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeSliders, ndefChanged, setUpDependencies, setUpParameters
+PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeParameterViews, ndefChanged, setUpDependencies
 
 METHOD:: ignoreParams
 Get or set the parameters to be ignored when calling link::#-randomize:: and link::#-vary:: on this instance.
