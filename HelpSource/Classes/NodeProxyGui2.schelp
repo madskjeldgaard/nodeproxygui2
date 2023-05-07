@@ -46,7 +46,7 @@ NodeProxyGui2.defaultIgnoreParams = [\freq, \pan];
 
 INSTANCEMETHODS::
 
-PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeParameterViews, ndefChanged, setUpDependencies
+PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeParameterViews, ndefChanged, parameterChanged, setUpDependencies
 
 METHOD:: ignoreParams
 Get or set the parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults:: on this instance. Expects an LINK::Classes/Array:: of symbols or strings.

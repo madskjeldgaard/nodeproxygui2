@@ -106,68 +106,94 @@ NodeProxyGui2 {
 	}
 
 	ndefChanged { | what, args |
-		var key, val, spec;
+		var key;
 
-		switch(what,
-			\set, {
-				key = args[0];
-				if(key == \fadeTime, {
-					updateInfoFunc.value(ndef)
-				}, {
-					if(params[key].notNil, {
-						val = args[1];
+		case
+		{ what == \set } {
+			key = args[0];
 
-						case
-						{ val.isNumber } {
-							if(paramViews[key][\type] != \number, { this.makeParameterSection() });
-							spec = params[key].value;
-							paramViews[key][\numBox].value_(spec.constrain(val));
-							paramViews[key][\slider].value_(spec.unmap(val));
-						}
-						{ val.isArray } {
-							if(paramViews[key][\type] != \array, { this.makeParameterSection() });
-							spec = params[key].value;
-							paramViews[key][\textField].value_(val.collect{ | v, i |
-								spec.wrapAt(i).constrain(v);
-							});
-						}
-						{ val.isKindOf(Bus) } {
-							if(paramViews[key][\type] != \bus, { this.makeParameterSection() });
-							spec = params[key].value;
-							paramViews[key][\numBox].value_(val.index);
-							paramViews[key][\text].string_(val);
-						}
-						{ val.isKindOf(Buffer) } {
-							if(paramViews[key][\type] != \buffer, { this.makeParameterSection() });
-							spec = params[key].value;
-							paramViews[key][\numBox].value_(val.bufnum);
-							paramViews[key][\text].string_(val);
-						}
-						{
-							"% parameter '%' not set".format(this.class, key).warn;
-						};
-					})
+			if(key == \fadeTime, {
+				updateInfoFunc.value(ndef)
+			}, {
+				if(params[key].notNil, {
+					this.parameterChanged(key, args[1])
 				})
-			},
-			\play, {
-				play.value_(1);
+			})
+		}
+		{ what == \vol } {
+			volvalueBox.value_(args[0].max(0.0));
+			volslider.value_(args[0]);
+		}
+		{ what == \play or: { what == \playN } } {
+			play.value_(1);
+			if(ndef.monitor.notNil and: { volslider.isNil }, {
 				this.makeParameterSection()
-			},
-			\stop, { play.value_(0) },
-			\vol, {
-				val = args[0];
-				volvalueBox.value_(val.max(0.0));
-				volslider.value_(val);
-			},
-			\bus, { updateInfoFunc.value(ndef) },
-			\rebuild, {
-				updateInfoFunc.value(ndef);
-				this.makeParameterSection();
-			},
-			\monitor, { ndef.monitor.addDependant(ndefChangedFunc) },
-			\source, { this.makeParameterSection() },
-			\clear, { updateInfoFunc.value(ndef) },
-		)
+			});
+		}
+		{ what == \monitor } {
+			ndef.monitor.addDependant(ndefChangedFunc)
+		}
+		{ what == \source } {
+			this.makeParameterSection()
+		}
+		{ what == \rebuild } {
+			updateInfoFunc.value(ndef);
+			this.makeParameterSection();
+		}
+		{ what == \bus } {
+			updateInfoFunc.value(ndef)
+		}
+		{ what == \clear } {
+			updateInfoFunc.value(ndef)
+		}
+		{ what == \stop or: { what == \pause } } {
+			play.value_(0)
+		}
+		{ what == \resume } {
+			play.value_(1)
+		}
+		//{ what == \map } {}
+		//{ what == \unset } {}
+		//{ what == \free } {}
+	}
+
+	parameterChanged { | key, val |
+		var spec;
+
+		case
+		{ val.isNumber } {
+			if(paramViews[key][\type] != \number, { this.makeParameterSection() });
+			spec = params[key].value;
+			paramViews[key][\numBox].value_(spec.constrain(val));
+			paramViews[key][\slider].value_(spec.unmap(val));
+		}
+		{ val.isArray } {
+			if(paramViews[key][\type] != \array, { this.makeParameterSection() });
+			spec = params[key].value;
+			paramViews[key][\textField].value_(val.collect{ | v, i |
+				spec.wrapAt(i).constrain(v);
+			});
+		}
+		{ val.isKindOf(Bus) } {
+			if(paramViews[key][\type] != \bus, { this.makeParameterSection() });
+			paramViews[key][\numBox].value_(val.index);
+			paramViews[key][\text].string_(val);
+		}
+		{ val.isKindOf(Buffer) } {
+			if(paramViews[key][\type] != \buffer, { this.makeParameterSection() });
+			paramViews[key][\numBox].value_(val.bufnum);
+			paramViews[key][\text].string_(val);
+		}
+		{ val.isKindOf(NodeProxy) } {
+			if(paramViews[key][\type] != \proxy, { this.makeParameterSection() });
+			if(val.isKindOf(Ndef), {
+				val = "% (%, %)".format(val, val.rate, val.numChannels)
+			});
+			paramViews[key][\text].string_(val);
+		}
+		{
+			"% parameter '%' not set".format(this.class, key).warn;
+		}
 	}
 
 	makeInfoSection {
@@ -304,6 +330,9 @@ NodeProxyGui2 {
 			{ val.isKindOf(Buffer) } {
 				ControlSpec.new(0, Server.default.options.numBuffers - 1, 'lin', 1)
 			}
+			{ val.isKindOf(NodeProxy) } {
+				nil.asSpec
+			}
 			{
 				"% using generic spec for '%'".format(this.class, key).warn;
 				nil.asSpec
@@ -328,34 +357,34 @@ NodeProxyGui2 {
 
 		view = View.new().layout_(VLayout.new());
 
-		volslider = Slider.new()
-		.orientation_(\horizontal)
-		.value_(ndef.vol)
-		.action_({ | obj |
-			ndef.vol_(obj.value);
-			volvalueBox.value_(obj.value);
+		if(ndef.monitor.notNil and: { ndef.rate == \audio }, {
+			volslider = Slider.new()
+			.orientation_(\horizontal)
+			.value_(ndef.vol)
+			.action_({ | obj |
+				ndef.vol_(obj.value);
+				volvalueBox.value_(obj.value);
+			});
+
+			vollabel = StaticText.new
+			.string_("vol");
+
+			volvalueBox = NumberBox.new()
+			.decimals_(4)
+			.action_({ | obj |
+				obj.value = obj.value.clip(0.0, 1.0);
+				volslider.value_(obj.value);
+				ndef.vol_(obj.value);
+			})
+			.value_(ndef.vol);
+
+			volLayout = HLayout.new(
+				[vollabel, s: 1],
+				[volvalueBox, s: 1],
+				[volslider, s: 4],
+			);
+			view.layout.add(volLayout);
 		});
-
-		// Label
-		vollabel = StaticText.new
-		.string_("vol");
-
-		// Value box
-		volvalueBox = NumberBox.new()
-		.decimals_(4)
-		.action_({ | obj |
-			obj.value = obj.value.clip(0.0, 1.0);
-			volslider.value_(obj.value);
-			ndef.vol_(obj.value);
-		})
-		.value_(ndef.vol);
-
-		volLayout = HLayout.new(
-			[vollabel, s: 1],
-			[volvalueBox, s: 1],
-			[volslider, s: 4],
-		);
-		view.layout.add(volLayout);
 
 		paramViews.clear;
 		params.sortedKeysValuesDo{ | key, spec |
@@ -457,6 +486,20 @@ NodeProxyGui2 {
 
 				layout.add(valueBox, 1);
 				layout.add(staticText, 4);
+			}
+
+			{ paramVal.isKindOf(NodeProxy) } {
+
+				if(paramVal.isKindOf(Ndef), {
+					paramVal = "% (%, %)".format(paramVal, paramVal.rate, paramVal.numChannels)
+				});
+
+				staticText = StaticText.new()
+				.string_(paramVal);
+
+				paramViews.put(key, (type: \proxy, text: staticText));
+
+				layout.add(staticText, 5);
 			}
 
 			{
