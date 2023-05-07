@@ -35,8 +35,7 @@ NodeProxyGui2 {
 			// parameterSection gets added here in makeParameterSection
 		);
 
-		window.view.children.do{ | x | x.font = font };
-		header.font = headerFont;
+		window.view.children.do{ | c | c.font = if(c == header, headerFont, font) };
 
 		this.setUpDependencies(limitUpdateRate.max(0));
 
@@ -68,7 +67,7 @@ NodeProxyGui2 {
 
 			limitOrder = OrderedIdentitySet.new(8);
 			limitDict = IdentityDictionary.new();
-			limitScheduler = SkipJack({
+			limitScheduler = SkipJack.new({
 				if(limitOrder.size > 0, {
 					limitOrder.do{ | key | this.ndefChanged(*limitDict[key]) };
 					limitOrder.clear;
@@ -185,7 +184,7 @@ NodeProxyGui2 {
 		ndefRate = StaticText.new()
 		.string_("rate: %".format(ndef.rate));
 
-		header = StaticText.new().string_(ndef.key);
+		header = StaticText.new().string_(ndef.key ? "");
 
 		^VLayout.new(
 			header,
@@ -291,7 +290,7 @@ NodeProxyGui2 {
 				if(val.rate == \control, { \controlbus }, { \audiobus }).asSpec
 			}
 			{ val.isKindOf(Buffer) } {
-				ControlSpec(0, Server.default.options.numBuffers - 1, 'lin', 1)
+				ControlSpec.new(0, Server.default.options.numBuffers - 1, 'lin', 1)
 			}
 			{
 				"% using generic spec for '%'".format(this.class, key).warn;
@@ -455,7 +454,7 @@ NodeProxyGui2 {
 			view.layout.add(layout)
 		};
 
-		view.children.do{ | x | x.font = font };
+		view.children.do{ | c | c.font = font };
 
 		^view
 	}
