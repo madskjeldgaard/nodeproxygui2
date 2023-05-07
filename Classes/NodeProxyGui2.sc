@@ -222,7 +222,9 @@ NodeProxyGui2 {
 		};
 		updateInfoFunc.value(ndef);
 
-		header = StaticText.new().string_(ndef.key ? "");
+		if(ndef.key.notNil, {
+			header = StaticText.new().string_(ndef.key)
+		});
 
 		^VLayout.new(
 			header,
