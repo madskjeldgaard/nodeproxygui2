@@ -8,8 +8,9 @@ NodeProxyGui2 {
 	var ndef;
 	var params, paramViews;
 
-	var play, fadeTime, numChannels, ndefRate, volslider, volvalueBox;
+	var play, volslider, volvalueBox;
 	var header, parameterSection;
+	var updateInfoFunc;
 
 	var font, headerFont;
 
@@ -111,7 +112,7 @@ NodeProxyGui2 {
 			\set, {
 				key = args[0];
 				if(key == \fadeTime, {
-					fadeTime.value = args[1]
+					updateInfoFunc.value(ndef)
 				}, {
 					if(params[key].notNil, {
 						val = args[1];
@@ -148,22 +149,29 @@ NodeProxyGui2 {
 					})
 				})
 			},
-			\play, { play.value_(1) },
+			\play, {
+				play.value_(1);
+				this.makeParameterSection()
+			},
 			\stop, { play.value_(0) },
 			\vol, {
 				val = args[0];
 				volvalueBox.value_(val.max(0.0));
 				volslider.value_(val);
 			},
-			\bus, { numChannels.string = "channels: %".format(args.numChannels) },
-			\rebuild, { ndefRate.string = "rate: %".format(ndef.rate) },
+			\bus, { updateInfoFunc.value(ndef) },
+			\rebuild, {
+				updateInfoFunc.value(ndef);
+				this.makeParameterSection();
+			},
 			\monitor, { ndef.monitor.addDependant(ndefChangedFunc) },
 			\source, { this.makeParameterSection() },
+			\clear, { updateInfoFunc.value(ndef) },
 		)
 	}
 
 	makeInfoSection {
-		var fadeTimeLabel;
+		var fadeTime, fadeTimeLabel, channels, rate;
 
 		fadeTimeLabel = StaticText.new()
 		.string_("fadeTime:");
@@ -173,22 +181,26 @@ NodeProxyGui2 {
 		.decimals_(2)
 		.scroll_step_(0.1) // mouse
 		.step_(0.1)        // keys
-		.value_(ndef.fadeTime)
 		.action_({ | obj |
 			ndef.fadeTime = obj.value;
 		});
 
-		numChannels = StaticText.new()
-		.string_("channels: %".format(ndef.numChannels));
+		channels = StaticText.new();
 
-		ndefRate = StaticText.new()
-		.string_("rate: %".format(ndef.rate));
+		rate = StaticText.new();
+
+		updateInfoFunc = { | ndef |
+			fadeTime.value = ndef.fadeTime;
+			channels.string = "channels: %".format(ndef.numChannels);
+			rate.string = "rate: %".format(ndef.rate);
+		};
+		updateInfoFunc.value(ndef);
 
 		header = StaticText.new().string_(ndef.key ? "");
 
 		^VLayout.new(
 			header,
-			HLayout.new(fadeTimeLabel, [fadeTime, a: \left], numChannels, ndefRate),
+			HLayout.new(fadeTimeLabel, [fadeTime, a: \left], channels, rate),
 		)
 	}
 
