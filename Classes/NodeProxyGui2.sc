@@ -321,10 +321,10 @@ NodeProxyGui2 {
 
 			spec = case
 			{ val.isNumber } {
-				(Spec.specs.at(key) ?? { ndef.specs.at(key) }).asSpec
+				(ndef.specs.at(key) ?? { Spec.specs.at(key) }).asSpec
 			}
 			{ val.isArray } {
-				(Spec.specs.at(key) ?? { ndef.specs.at(key) }).asSpec.dup(val.size)
+				(ndef.specs.at(key) ?? { Spec.specs.at(key) }).asSpec.dup(val.size)
 			}
 			{ val.isKindOf(Bus) } {
 				if(val.rate == \control, { \controlbus }, { \audiobus }).asSpec
