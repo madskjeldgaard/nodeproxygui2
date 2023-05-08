@@ -1,83 +1,100 @@
 TITLE:: NodeProxyGui2
-summary:: Providing a modern alternative to the NodeProxy gui
-categories:: JITLib>GUI
-related:: Classes/NdefGui, Classes/NdefParamGui
+SUMMARY:: Providing a modern alternative to the NodeProxy GUI
+CATEGORIES:: JITLib>GUI
+RELATED:: Classes/NdefGui, Classes/NdefParamGui
+
 
 DESCRIPTION::
 
-NodeProxyGui2 is a modernized alternative to the classic NodeProxy/Ndef gui
-available in SuperCollider. It fixes a number of problems with the old gui,
+NodeProxyGui2 is a modernized alternative to the classic NodeProxy/Ndef GUI
+available in SuperCollider. It fixes a number of problems with the old GUI,
 improves some things and adds a few handy new features to its set.
 
-The main motivation behind it is to create a gui that is:
+The main motivation behind it is to create a GUI that is:
 
-- Readable (labels have a readable font size on modern displays and do not get
-"cut off" if overflowing because of long names)
-- Has a tight integration with local and global link::Classes/ControlSpec::s,
+LIST::
+## Readable (labels have a readable font size on modern displays and do not get
+EMPHASIS::cut off:: if overflowing because of long names)
+## Has a tight integration with local and global LINK::Classes/ControlSpec::s,
 and if no spec is found for a parameter, it has a reasonable fallback (assuming
 it is a parameter with the range 0.0 to 1.0)
-- Has user scaleable layout – GUI elements resize with window size.
+## Has user scaleable layout – GUI elements resize with window size.
+::
+
 
 CLASSMETHODS::
 
 METHOD:: new
 
 ARGUMENT:: nodeproxy
-An link::Classes/Ndef:: instance.
+An LINK::Classes/Ndef:: instance.
 
 ARGUMENT:: limitUpdateRate
-The higher this value, the slower the interface will update. Set to a non-zero value to reduce the CPU cost of updating GUI elements. In seconds. 0.0 (default) will update instantly and 0.1 ten times per second.
+The higher this value, the slower the interface will update. In seconds. Default is CODE::0:: which mean instant updates.
+
+DISCUSSION::
+A non-zero limitUpdateRate will reduce the CPU cost of updating GUI elements. If there are many parameters continuously updated - say from a bunch of noisy sensor readings, a resonable limit is CODE::0.1::. That will force the GUI elements to only redraw ten times per second. CODE::0.1:: is also what the standard LINK::Classes/NdefGui:: uses internally. The limitUpdateRate can also be specified as an argument to the LINK::Classes/NodeProxy#-gui2:: method.
+
 
 METHOD:: defaultIgnoreParams
-Parameters to be ignored when calling link::#-randomize:: and link::#-vary::.
+Parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults::. Expects an LINK::Classes/Array:: of symbols or strings.
+
+CODE::
+NodeProxyGui2.defaultIgnoreParams = [\freq, \pan];
+::
 
 
 INSTANCEMETHODS::
 
-PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeSliders, ndefChanged, setUpDependencies, setUpParameters
+PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeParameterViews, ndefChanged, parameterChanged, setUpDependencies
 
 METHOD:: ignoreParams
-Get or set the parameters to be ignored when calling link::#-randomize:: and link::#-vary:: on this instance.
-This should be an link::Classes/Array:: with strings or symbols. Strings can be regular expressions like code::*:: for wildcard.
+Get or set the parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults:: on this instance. Expects an LINK::Classes/Array:: of symbols or strings.
 
 METHOD:: randomize
-Set parameters to random values. This will use the internal link::Classes/ControlSpec:: to figure out the range.
+Set parameters to random values. This will use LINK::Classes/ControlSpec::s stored in CODE::Spec.specs:: to figure out the range.
 
-argument:: randmin
-A link::Classes/Float::.
+ARGUMENT:: randmin
+A LINK::Classes/Float::.
 
-argument:: randmax
-A link::Classes/Float::.
+ARGUMENT:: randmax
+A LINK::Classes/Float::.
 
-argument:: except
-An link::Classes/Array:: of symbols or strings specifying which parameters to exclude. See link::Classes/NodeProxy#-controlKeys::.
+ARGUMENT:: except
+An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::.
 
 METHOD:: vary
-Set parameters to nearby random values - gaussian distribution. This will use the internal link::Classes/ControlSpec:: to figure out the range.
+Set parameters to nearby random values - gaussian distribution. This will use LINK::Classes/ControlSpec::s stored in CODE::Spec.specs:: to figure out the range.
 
-argument:: deviation
+ARGUMENT:: deviation
 In percent.
 
-argument:: except
-An link::Classes/Array:: of symbols or strings specifying which parameters to exclude. See link::Classes/NodeProxy#-controlKeys::.
+ARGUMENT:: except
+An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::.
+
+METHOD:: defaults
+Set parameters to LINK::Classes/ControlSpec:: default values. Specs are looked up in CODE::Spec.specs::. If not found CODE::ControlSpec(0.0, 1.0, 'linear', 0.0, 0.0, ""):: will be used.
+
+ARGUMENT:: except
+An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::.
 
 METHOD:: close
 Closes the window.
 
 METHOD:: window
-Get the link::Classes/Window:: instance.
+Get the LINK::Classes/Window:: instance.
 
 
 EXAMPLES::
 
-code::
+CODE::
 (
 Ndef(\yiyi, {|freq=300, amp=0.5, pan=0|
 	Pan2.ar(SinOsc.ar(freq), pos: pan, level: amp)
 });
 )
 
-// .gui2 returns the gui, allowing you to further manipulate it later on, or simply close it
+// .gui2 returns the GUI, allowing you to further manipulate it later on, or simply close it
 g = Ndef(\yiyi).gui2;
 
 Ndef(\yiyi).randomizeAllParamsMapped;
@@ -88,6 +105,6 @@ Ndef(\yiyi).randomizeAllParamsMapped(except: [\amp]);
 g.ignoreParams = [\amp];
 g.randomize;
 
-// Close the gui
+// Close the GUI
 g.close();
 ::

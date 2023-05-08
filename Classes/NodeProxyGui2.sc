@@ -4,14 +4,16 @@ NodeProxyGui2 {
 
 	var <>ignoreParams;
 	var <window;
-	var ndef, play, fadeTime, numChannels, ndefRate, volslider, volvalueBox;
-	var header;
-	var parameterSection;
-	var sliderDict;
+
+	var ndef;
+	var params, paramViews;
+
+	var play, volslider, volvalueBox;
+	var header, parameterSection;
+	var updateInfoFunc;
 
 	var font, headerFont;
 
-	var params;
 	var ndefChangedFunc, specChangedFunc;
 
 	// this is a normal constructor method
@@ -25,16 +27,16 @@ NodeProxyGui2 {
 		this.initFonts();
 
 		params = IdentityDictionary.new();
-		sliderDict = IdentityDictionary.new();
+		paramViews = IdentityDictionary.new();
 
 		window = Window.new(ndef.key);
-		window.layout = VLayout(
+		window.layout = VLayout.new(
 			this.makeInfoSection(),
 			this.makeTransportSection(),
-			//parameterSection gets added here in makeParameterSection
+			// parameterSection gets added here in makeParameterSection
 		);
-		window.view.children.do{ | x | x.font = font};
-		header.font = headerFont;
+
+		window.view.children.do{ | c | c.font = if(c == header, headerFont, font) };
 
 		this.setUpDependencies(limitUpdateRate.max(0));
 
@@ -52,22 +54,23 @@ NodeProxyGui2 {
 			if(args[0] == \add, {
 				key = args[1][0];
 				spec = args[1][1];
-				if(params[key].notNil and:{params[key] != spec}, {
-					{this.setUpParameters()}.defer;
+				if(params[key].notNil and:{ params[key] != spec }, {
+					{ this.makeParameterSection() }.defer;
 				})
 			})
 		};
 
 		specChangedFunc = { | obj ...args |
-			{this.setUpParameters()}.defer;
+			{ this.makeParameterSection() }.defer;
 		};
 
 		ndefChangedFunc = if(limitUpdateRate > 0, {
+
 			limitOrder = OrderedIdentitySet.new(8);
 			limitDict = IdentityDictionary.new();
-			limitScheduler = SkipJack({
+			limitScheduler = SkipJack.new({
 				if(limitOrder.size > 0, {
-					limitOrder.do{ | key | this.ndefChanged(*limitDict[key])};
+					limitOrder.do{ | key | this.ndefChanged(*limitDict[key]) };
 					limitOrder.clear;
 					limitDict.clear;
 				});
@@ -78,10 +81,13 @@ NodeProxyGui2 {
 					key = (key ++ args[1][0]).asSymbol;
 				});
 				limitOrder.add(key);
-				limitDict.put(key, args)
+				limitDict.put(key, args);
 			}
+
 		}, {
-			{ | obj ...args | {this.ndefChanged(*args)}.defer}
+
+			{ | obj ...args | { this.ndefChanged(*args) }.defer }
+
 		});
 
 		Spec.addDependant(specAddedFunc);
@@ -95,42 +101,105 @@ NodeProxyGui2 {
 			ndef.monitor.removeDependant(ndefChangedFunc);
 			ndef.removeDependant(ndefChangedFunc);
 			Spec.removeDependant(specAddedFunc);
-			params.do{ | spec | spec.removeDependant(specChangedFunc)};
+			params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		};
 	}
 
 	ndefChanged { | what, args |
-		var key, val, spec;
-		switch(what,
-			\set, {
-				key = args[0];
-				if(key == \fadeTime, {
-					fadeTime.value = args[1]
-				}, {
-					if(params[key].notNil, {
-						val = args[1];
-						spec = params[key].value;
-						sliderDict[key][\numBox].value_(spec.constrain(val));
-						sliderDict[key][\slider].value_(spec.unmap(val));
-					})
+		var key;
+
+		case
+		{ what == \set } {
+			key = args[0];
+
+			if(key == \fadeTime, {
+				updateInfoFunc.value(ndef)
+			}, {
+				if(params[key].notNil, {
+					this.parameterChanged(key, args[1])
 				})
-			},
-			\play, {play.value_(1)},
-			\stop, {play.value_(0)},
-			\vol, {
-				val = args[0];
-				volvalueBox.value_(val.max(0.0));
-				volslider.value_(val);
-			},
-			\bus, {numChannels.string = "channels: %".format(args.numChannels)},
-			\rebuild, {ndefRate.string = "rate: %".format(ndef.rate)},
-			\monitor, {ndef.monitor.addDependant(ndefChangedFunc)},
-			\source, {this.makeParameterSection()},
-		)
+			})
+		}
+		{ what == \vol } {
+			if(volslider.notNil, {
+				volvalueBox.value_(args[0].max(0.0));
+				volslider.value_(args[0]);
+			});
+		}
+		{ what == \play or: { what == \playN } } {
+			play.value_(1);
+			if(ndef.monitor.notNil and: { volslider.isNil }, {
+				this.makeParameterSection()
+			});
+		}
+		{ what == \monitor } {
+			ndef.monitor.addDependant(ndefChangedFunc)
+		}
+		{ what == \source } {
+			this.makeParameterSection()
+		}
+		{ what == \rebuild } {
+			updateInfoFunc.value(ndef);
+			this.makeParameterSection();
+		}
+		{ what == \bus } {
+			updateInfoFunc.value(ndef)
+		}
+		{ what == \clear } {
+			updateInfoFunc.value(ndef)
+		}
+		{ what == \stop or: { what == \pause } } {
+			play.value_(0)
+		}
+		{ what == \resume } {
+			play.value_(1)
+		}
+		//{ what == \map } {}
+		//{ what == \unset } {}
+		//{ what == \free } {}
+	}
+
+	parameterChanged { | key, val |
+		var spec;
+
+		case
+		{ val.isNumber } {
+			if(paramViews[key][\type] != \number, { this.makeParameterSection() });
+			spec = params[key].value;
+			paramViews[key][\numBox].value_(spec.constrain(val));
+			paramViews[key][\slider].value_(spec.unmap(val));
+		}
+		{ val.isArray } {
+			if(paramViews[key][\type] != \array, { this.makeParameterSection() });
+			spec = params[key].value;
+			paramViews[key][\textField].value_(val.collect{ | v, i |
+				spec.wrapAt(i).constrain(v);
+			});
+		}
+		{ val.isKindOf(Bus) } {
+			if(paramViews[key][\type] != \bus, { this.makeParameterSection() });
+			paramViews[key][\numBox].value_(val.index);
+			paramViews[key][\text].string_(val);
+		}
+		{ val.isKindOf(Buffer) } {
+			if(paramViews[key][\type] != \buffer, { this.makeParameterSection() });
+			paramViews[key][\numBox].value_(val.bufnum);
+			paramViews[key][\text].string_(val);
+		}
+		{ val.isKindOf(NodeProxy) } {
+			if(paramViews[key][\type] != \proxy, { this.makeParameterSection() });
+			if(val.isKindOf(Ndef), {
+				val = "% (%, %)".format(val, val.rate, val.numChannels)
+			});
+			paramViews[key][\text].string_(val);
+		}
+		{
+			"% parameter '%' not set".format(this.class, key).warn;
+		}
 	}
 
 	makeInfoSection {
-		var fadeTimeLabel;
+		var fadeTime, fadeTimeLabel, channels, rate;
 
 		fadeTimeLabel = StaticText.new()
 		.string_("fadeTime:");
@@ -140,22 +209,28 @@ NodeProxyGui2 {
 		.decimals_(2)
 		.scroll_step_(0.1) // mouse
 		.step_(0.1)        // keys
-		.value_(ndef.fadeTime)
 		.action_({ | obj |
 			ndef.fadeTime = obj.value;
 		});
 
-		numChannels = StaticText.new()
-		.string_("channels: %".format(ndef.numChannels));
+		channels = StaticText.new();
 
-		ndefRate = StaticText.new()
-		.string_("rate: %".format(ndef.rate));
+		rate = StaticText.new();
 
-		header = StaticText.new().string_(ndef.key);
+		updateInfoFunc = { | ndef |
+			fadeTime.value = ndef.fadeTime;
+			channels.string = "channels: %".format(ndef.numChannels);
+			rate.string = "rate: %".format(ndef.rate);
+		};
+		updateInfoFunc.value(ndef);
 
-		^VLayout(
+		if(ndef.key.notNil, {
+			header = StaticText.new().string_(ndef.key)
+		});
+
+		^VLayout.new(
 			header,
-			HLayout(fadeTimeLabel, [fadeTime, a: \left], numChannels, ndefRate),
+			HLayout.new(fadeTimeLabel, [fadeTime, a: \left], channels, rate),
 		)
 	}
 
@@ -165,11 +240,11 @@ NodeProxyGui2 {
 		play = Button.new()
 		.states_([
 			["play"],
-			["stop", Color.black, Color.grey(0.5, 0.5)]
+			["stop", Color.black, Color.grey(0.5, 0.5)],
 		])
 		.action_({ | obj |
 			if(obj.value == 1, {
-				ndef.play;
+				ndef.play
 			}, {
 				ndef.stop
 			})
@@ -205,10 +280,10 @@ NodeProxyGui2 {
 			["free"]
 		])
 		.action_({ | obj |
-			ndef.free;
+			ndef.free
 		});
 
-		popup = PopUpMenu()
+		popup = PopUpMenu.new()
 		.allowsReselection_(true)
 		.items_(#[
 			"defaults",
@@ -219,12 +294,12 @@ NodeProxyGui2 {
 		])
 		.action_({ | obj |
 			switch(obj.value,
-				0, {ndef.setDefaults()},
-				1, {this.randomize()},
-				2, {this.vary()},
-				3, {ndef.document},
-				4, {ndef.asCode.postln},
-			);
+				0, { this.defaults() },
+				1, { this.randomize() },
+				2, { this.vary() },
+				3, { ndef.document },
+				4, { ndef.asCode.postln },
+			)
 		})
 		.keyDownAction_({ | obj, char |
 			if(char == Char.ret, {
@@ -234,115 +309,211 @@ NodeProxyGui2 {
 		.canFocus_(true)
 		.fixedWidth_(25);
 
-		^HLayout(
+		^HLayout.new(
 			play, clear, free, scope, send, popup
 		)
 	}
 
 	makeParameterSection {
-		var ndefKeys = ndef.controlKeys;
-		var paramKeys = params.keys;
-
-		if(paramKeys.size != ndefKeys.size or: {paramKeys.includesAll(ndefKeys).not}, {
-			this.setUpParameters();
-		});
-	}
-
-	setUpParameters {
-		params.do{ | spec | spec.removeDependant(specChangedFunc)};
+		params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		params.clear;
 
-		ndef.controlKeys.do{ | paramname |
-			var spec = (Spec.specs.at(paramname) ?? {ndef.specs.at(paramname)}).asSpec;
-			//"Spec for paramname %: %".format(paramname, spec).postln;
+		ndef.controlKeysValues.pairsDo{ | key, val |
+			var spec;
+
+			spec = case
+			{ val.isNumber } {
+				(ndef.specs.at(key) ?? { Spec.specs.at(key) }).asSpec
+			}
+			{ val.isArray } {
+				(ndef.specs.at(key) ?? { Spec.specs.at(key) }).asSpec.dup(val.size)
+			}
+			{ val.isKindOf(Bus) } {
+				if(val.rate == \control, { \controlbus }, { \audiobus }).asSpec
+			}
+			{ val.isKindOf(Buffer) } {
+				ControlSpec.new(0, Server.default.options.numBuffers - 1, 'lin', 1)
+			}
+			{ val.isKindOf(NodeProxy) } {
+				nil.asSpec
+			}
+			{
+				"% using generic spec for '%'".format(this.class, key).warn;
+				nil.asSpec
+			};
+
+			// "Spec for paramname %: %".format(key, spec).postln;
 			spec.addDependant(specChangedFunc);
-			params.put(paramname, spec)
+			params.put(key, spec);
 		};
 
-		if(parameterSection.notNil, {parameterSection.close});
-		parameterSection = this.makeSliders();
-		parameterSection.resizeToHint;
+		if(parameterSection.notNil, { parameterSection.close });
+		parameterSection = this.makeParameterViews().resizeToHint;
 		if(parameterSection.bounds.height > (Window.availableBounds.height * 0.5), {
-			parameterSection = ScrollView().canvas_(parameterSection);
+			parameterSection = ScrollView.new().canvas_(parameterSection);
 		});
 		window.layout.add(parameterSection, 1);
-
 		window.resizeToHint;
 	}
 
-	makeSliders {
+	makeParameterViews {
 		var view, vollabel, volLayout;
 
-		view = View().layout_(VLayout());
+		view = View.new().layout_(VLayout.new());
 
-		volslider = Slider.new()
-		.orientation_(\horizontal)
-		.value_(ndef.vol)
-		.action_({ | obj |
-			ndef.vol_(obj.value);
-			volvalueBox.value_(obj.value);
+		if(ndef.monitor.notNil and: { ndef.rate == \audio }, {
+			volslider = Slider.new()
+			.orientation_(\horizontal)
+			.value_(ndef.vol)
+			.action_({ | obj |
+				ndef.vol_(obj.value);
+				volvalueBox.value_(obj.value);
+			});
+
+			vollabel = StaticText.new
+			.string_("vol");
+
+			volvalueBox = NumberBox.new()
+			.decimals_(4)
+			.action_({ | obj |
+				obj.value = obj.value.clip(0.0, 1.0);
+				volslider.value_(obj.value);
+				ndef.vol_(obj.value);
+			})
+			.value_(ndef.vol);
+
+			volLayout = HLayout.new(
+				[vollabel, s: 1],
+				[volvalueBox, s: 1],
+				[volslider, s: 4],
+			);
+			view.layout.add(volLayout);
 		});
 
-		// Label
-		vollabel = StaticText.new
-		.string_("vol");
+		paramViews.clear;
+		params.sortedKeysValuesDo{ | key, spec |
+			var layout, paramVal;
+			var slider, valueBox, textField, staticText;
 
-		// Value box
-		volvalueBox = NumberBox.new()
-		.decimals_(4)
-		.action_({ | obj |
-			obj.value = obj.value.clip(0.0, 1.0);
-			volslider.value_(obj.value);
-			ndef.vol_(obj.value);
-		})
-		.value_(ndef.vol);
+			layout = HLayout.new(
+				[StaticText.new().string_(key), s: 1],
+			);
 
-		volLayout = HLayout([vollabel, s: 1], [volvalueBox, s: 1], [volslider, s: 4]);
-		view.layout.add(volLayout);
+			paramVal = ndef.get(key);
 
-		sliderDict.clear;
-		params.sortedKeysValuesDo{ | pName, spec |
-			var paramVal, slider, label, valueBox, sliderLayout;
+			case
 
-			// Only make slider for this parameter, if it is a number
-			ndef.get(pName).isKindOf(SimpleNumber).if{
+			{ paramVal.isNumber } {
 
-				// Slider
-				paramVal = ndef.get(pName);
 				slider = Slider.new()
-				// .step_(spec.step)
 				.orientation_(\horizontal)
 				.value_(spec.unmap(paramVal))
 				.action_({ | obj |
-					var mappedVal = spec.map(obj.value);
-					valueBox.value = mappedVal;
-					ndef.set(pName, mappedVal);
+					var val = spec.map(obj.value);
+					valueBox.value = val;
+					ndef.set(key, val);
 				});
 
-				// Label
-				label = StaticText.new
-				.string_(pName);
-
-				// Value box
 				valueBox = NumberBox.new()
 				.action_({ | obj |
-					var mappedVal = spec.unmap(obj.value);
-					slider.value_(mappedVal);
-					ndef.set(pName, obj.value);
+					var val = spec.constrain(obj.value);
+					slider.value_(spec.unmap(val));
+					ndef.set(key, val);
 				})
 				.decimals_(4)
 				.value_(spec.constrain(paramVal));
 
-				// Slider Layout
-				sliderLayout = HLayout([label, s: 1], [valueBox, s: 1], [slider, s: 4]);
-
 				// This is used to be able to fetch the sliders later when they need to be updated
-				sliderDict.put(pName, (slider: slider, numBox: valueBox));
+				paramViews.put(key, (type: \number, slider: slider, numBox: valueBox));
 
-				view.layout.add(sliderLayout)
+				layout.add(valueBox, 1);
+				layout.add(slider, 4);
 			}
+
+			{ paramVal.isArray } {
+
+				textField = TextField.new()
+				.action_({ | obj |
+					var val = try{ obj.value.interpret };  // this time as a feature!
+					if(val.notNil, {
+						val = val.asArray.collect{ | v, i | spec.wrapAt(i).constrain(v) };
+						obj.value = val;
+						ndef.set(key, val);
+					});
+				})
+				.value_(paramVal);
+
+				paramViews.put(key, (type: \array, textField: textField));
+
+				layout.add(textField, 5);
+			}
+
+			{ paramVal.isKindOf(Bus) } {
+
+				valueBox = NumberBox.new()
+				.action_({ | obj |
+					var bus;
+					var val = spec.constrain(obj.value).asInteger;
+					obj.value = val;
+					bus = Bus.new(paramVal.rate, val, paramVal.numChannels);
+					ndef.set(key, bus);
+				})
+				.value_(paramVal.index);
+
+				staticText = StaticText.new()
+				.string_(paramVal);
+
+				paramViews.put(key, (type: \bus, numBox: valueBox, text: staticText));
+
+				layout.add(valueBox, 1);
+				layout.add(staticText, 4);
+			}
+
+			{ paramVal.isKindOf(Buffer) } {
+
+				valueBox = NumberBox.new()
+				.action_({ | obj |
+					var buf;
+					var val = spec.constrain(obj.value).asInteger;
+					obj.value = val;
+					buf = Buffer.cachedBufferAt(paramVal.server, val);
+					if(buf.notNil, {
+						ndef.set(key, buf);
+					});
+				})
+				.value_(paramVal.bufnum);
+
+				staticText = StaticText.new()
+				.string_(paramVal);
+
+				paramViews.put(key, (type: \buffer, numBox: valueBox, text: staticText));
+
+				layout.add(valueBox, 1);
+				layout.add(staticText, 4);
+			}
+
+			{ paramVal.isKindOf(NodeProxy) } {
+
+				if(paramVal.isKindOf(Ndef), {
+					paramVal = "% (%, %)".format(paramVal, paramVal.rate, paramVal.numChannels)
+				});
+
+				staticText = StaticText.new()
+				.string_(paramVal);
+
+				paramViews.put(key, (type: \proxy, text: staticText));
+
+				layout.add(staticText, 5);
+			}
+
+			{
+				"% parameter '%' ignored".format(this.class, key).warn;
+			};
+
+			view.layout.add(layout)
 		};
-		view.children.do{ | x | x.font = font};
+
+		view.children.do{ | c | c.font = font };
 
 		^view
 	}
@@ -352,6 +523,7 @@ NodeProxyGui2 {
 
 		fontSize = 14;
 		headerFontSize = fontSize * 2;
+
 		headerFont = Font.sansSerif(headerFontSize, bold: true, italic: false);
 		font = Font.monospace(fontSize, bold: false, italic: false);
 	}
@@ -364,6 +536,11 @@ NodeProxyGui2 {
 	vary { | deviation = 0.1, except = #[] |
 		except = defaultIgnoreParams ++ ignoreParams ++ except;
 		ndef.varyAllParamsMapped(deviation, except)
+	}
+
+	defaults { | except = #[] |
+		except = defaultIgnoreParams ++ ignoreParams ++ except;
+		ndef.setDefaults(except)
 	}
 
 	close {
