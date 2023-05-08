@@ -347,13 +347,13 @@ NodeProxyGui2 {
 			params.put(key, spec);
 		};
 
-		if(parameterSection.notNil, { parameterSection.close });
+		if(parameterSection.notNil, { parameterSection.remove });
 		parameterSection = this.makeParameterViews().resizeToHint;
 		if(parameterSection.bounds.height > (Window.availableBounds.height * 0.5), {
 			parameterSection = ScrollView.new().canvas_(parameterSection);
 		});
 		window.layout.add(parameterSection, 1);
-		window.resizeToHint;
+		{ window.view.resizeToHint }.defer(0.07);
 	}
 
 	makeParameterViews {
