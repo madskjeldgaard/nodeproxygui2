@@ -6,15 +6,16 @@
 		except = except.asArray.collect{ | param | param.asSymbol };
 
 		this.controlKeysValues.pairsDo({ | key, val |
-			var ignore;
+			var ignore, spec;
 
 			ignore = except.any{ | ignoreParam | ignoreParam == key };
 			if(ignore.not, {
+				spec = (this.specs.at(key) ?? { Spec.specs.at(key) }).asSpec;
 				if(val.isNumber, {
-					accepted.put(key, Spec.specs.at(key).asSpec)
+					accepted.put(key, spec)
 				}, {
 					if(val.isArray, {
-						accepted.put(key, Spec.specs.at(key).asSpec.dup(val.size))
+						accepted.put(key, spec.dup(val.size))
 					})
 					// Buffer and Bus values are ignored
 				})
