@@ -121,8 +121,10 @@ NodeProxyGui2 {
 			})
 		}
 		{ what == \vol } {
-			volvalueBox.value_(args[0].max(0.0));
-			volslider.value_(args[0]);
+			if(volslider.notNil, {
+				volvalueBox.value_(args[0].max(0.0));
+				volslider.value_(args[0]);
+			});
 		}
 		{ what == \play or: { what == \playN } } {
 			play.value_(1);
