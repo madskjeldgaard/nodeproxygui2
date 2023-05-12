@@ -1,35 +1,6 @@
 INSTANCEMETHODS::
 
-PRIVATE:: prFilteredParams
-
 SUBSECTION:: Extensions by NodeProxyGui2 quark
-
-METHOD:: randomizeAllParamsMapped
-Set parameters to random values. This will use LINK::Classes/ControlSpec::s stored in CODE::Spec.specs:: to figure out the range.
-
-ARGUMENT:: randmin
-A LINK::Classes/Float::.
-
-ARGUMENT:: randmax
-A LINK::Classes/Float::.
-
-ARGUMENT:: except
-An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::. Wildcards (*) are supported.
-
-METHOD:: varyAllParamsMapped
-Set parameters to nearby random values - gaussian distribution. This will use LINK::Classes/ControlSpec::s stored in CODE::Spec.specs:: to figure out the range.
-
-ARGUMENT:: deviation
-In percent.
-
-ARGUMENT:: except
-An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::. Wildcards (*) are supported.
-
-METHOD:: setDefaults
-Set parameters to LINK::Classes/ControlSpec:: default values. Specs are looked up in CODE::Spec.specs::. If not found CODE::ControlSpec(0.0, 1.0, 'linear', 0.0, 0.0, ""):: will be used.
-
-ARGUMENT:: except
-An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::. Wildcards (*) are supported.
 
 METHOD:: gui2
 Creates a GUI for this NodeProxy. Shortcut for CODE::NodeProxyGui2.new(thisNodeProxy)::
