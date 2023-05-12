@@ -37,10 +37,10 @@ A non-zero limitUpdateRate will reduce the CPU cost of updating GUI elements. If
 
 
 METHOD:: defaultIgnoreParams
-Parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults::. Expects an LINK::Classes/Array:: of symbols or strings.
+Parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults::. Expects an LINK::Classes/Array:: of symbols or strings. Wildcards (*) are supported.
 
 CODE::
-NodeProxyGui2.defaultIgnoreParams = [\freq, \pan];
+NodeProxyGui2.defaultIgnoreParams = ["freq*", \pan];
 ::
 
 
@@ -49,7 +49,7 @@ INSTANCEMETHODS::
 PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeParameterViews, ndefChanged, parameterChanged, setUpDependencies
 
 METHOD:: ignoreParams
-Get or set the parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults:: on this instance. Expects an LINK::Classes/Array:: of symbols or strings.
+Get or set the parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults:: on this instance. Expects an LINK::Classes/Array:: of symbols or strings. Wildcards (*) are supported.
 
 METHOD:: randomize
 Set parameters to random values. This will use LINK::Classes/ControlSpec::s stored in CODE::Spec.specs:: to figure out the range.
@@ -61,7 +61,7 @@ ARGUMENT:: randmax
 A LINK::Classes/Float::.
 
 ARGUMENT:: except
-An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::.
+An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::. Wildcards (*) are supported.
 
 METHOD:: vary
 Set parameters to nearby random values - gaussian distribution. This will use LINK::Classes/ControlSpec::s stored in CODE::Spec.specs:: to figure out the range.
@@ -70,13 +70,13 @@ ARGUMENT:: deviation
 In percent.
 
 ARGUMENT:: except
-An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::.
+An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::. Wildcards (*) are supported.
 
 METHOD:: defaults
 Set parameters to LINK::Classes/ControlSpec:: default values. Specs are looked up in CODE::Spec.specs::. If not found CODE::ControlSpec(0.0, 1.0, 'linear', 0.0, 0.0, ""):: will be used.
 
 ARGUMENT:: except
-An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::.
+An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::. Wildcards (*) are supported.
 
 METHOD:: close
 Closes the window.

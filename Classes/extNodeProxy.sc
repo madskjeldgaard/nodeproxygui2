@@ -3,12 +3,16 @@
 	prFilteredParams { | except |
 		var accepted = IdentityDictionary.new;
 
-		except = except.asArray.collect{ | param | param.asSymbol };
-
 		this.controlKeysValues.pairsDo({ | key, val |
 			var ignore, spec;
 
-			ignore = except.any{ | ignoreParam | ignoreParam == key };
+			ignore = except.any{ | ignoreParam |
+				if(ignoreParam.isString and:{ ignoreParam.indexOf($*).notNil }, {
+					ignoreParam.replace("*", ".*").addFirst($^).add($$).matchRegexp(key.asString)
+				}, {
+					ignoreParam.asSymbol == key
+				})
+			};
 			if(ignore.not, {
 				spec = (this.specs.at(key) ?? { Spec.specs.at(key) }).asSpec;
 				if(val.isNumber, {
