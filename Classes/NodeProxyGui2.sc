@@ -5,7 +5,7 @@ NodeProxyGui2 {
 	var <>ignoreParams;
 	var <window;
 
-	var ndef;
+	var <nodeProxy;
 	var params, paramViews;
 
 	var play, volslider, volvalueBox;
@@ -14,22 +14,22 @@ NodeProxyGui2 {
 
 	var font, headerFont;
 
-	var ndefChangedFunc, specChangedFunc;
+	var nodeProxyChangedFunc, specChangedFunc;
 
 	// this is a normal constructor method
 	*new { | nodeproxy, limitUpdateRate = 0 |
 		^super.new.init(nodeproxy, limitUpdateRate)
 	}
 
-	init { | nodeproxy, limitUpdateRate |
-		ndef = nodeproxy;
+	init { | argNodeProxy, limitUpdateRate |
+		nodeProxy = argNodeProxy;
 
 		this.initFonts();
 
 		params = IdentityDictionary.new();
 		paramViews = IdentityDictionary.new();
 
-		window = Window.new(ndef.key);
+		window = Window.new(nodeProxy.key);
 		window.layout = VLayout.new(
 			this.makeInfoSection(),
 			this.makeTransportSection(),
@@ -64,13 +64,13 @@ NodeProxyGui2 {
 			{ this.makeParameterSection() }.defer;
 		};
 
-		ndefChangedFunc = if(limitUpdateRate > 0, {
+		nodeProxyChangedFunc = if(limitUpdateRate > 0, {
 
 			limitOrder = OrderedIdentitySet.new(8);
 			limitDict = IdentityDictionary.new();
 			limitScheduler = SkipJack.new({
 				if(limitOrder.size > 0, {
-					limitOrder.do{ | key | this.ndefChanged(*limitDict[key]) };
+					limitOrder.do{ | key | this.nodeProxyChanged(*limitDict[key]) };
 					limitOrder.clear;
 					limitDict.clear;
 				});
@@ -86,26 +86,26 @@ NodeProxyGui2 {
 
 		}, {
 
-			{ | obj ...args | { this.ndefChanged(*args) }.defer }
+			{ | obj ...args | { this.nodeProxyChanged(*args) }.defer }
 
 		});
 
 		Spec.addDependant(specAddedFunc);
-		ndef.addDependant(ndefChangedFunc);
-		if(ndef.monitor.notNil, {
-			ndef.monitor.addDependant(ndefChangedFunc)
+		nodeProxy.addDependant(nodeProxyChangedFunc);
+		if(nodeProxy.monitor.notNil, {
+			nodeProxy.monitor.addDependant(nodeProxyChangedFunc)
 		});
 
 		window.onClose = {
 			limitScheduler.stop;
-			ndef.monitor.removeDependant(ndefChangedFunc);
-			ndef.removeDependant(ndefChangedFunc);
+			nodeProxy.monitor.removeDependant(nodeProxyChangedFunc);
+			nodeProxy.removeDependant(nodeProxyChangedFunc);
 			Spec.removeDependant(specAddedFunc);
 			params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		};
 	}
 
-	ndefChanged { | what, args |
+	nodeProxyChanged { | what, args |
 		var key;
 
 		case
@@ -113,7 +113,7 @@ NodeProxyGui2 {
 			key = args[0];
 
 			if(key == \fadeTime, {
-				updateInfoFunc.value(ndef)
+				updateInfoFunc.value(nodeProxy)
 			}, {
 				if(params[key].notNil, {
 					this.parameterChanged(key, args[1])
@@ -128,25 +128,25 @@ NodeProxyGui2 {
 		}
 		{ what == \play or: { what == \playN } } {
 			play.value_(1);
-			if(ndef.monitor.notNil and: { volslider.isNil }, {
+			if(nodeProxy.monitor.notNil and: { volslider.isNil }, {
 				this.makeParameterSection()
 			});
 		}
 		{ what == \monitor } {
-			ndef.monitor.addDependant(ndefChangedFunc)
+			nodeProxy.monitor.addDependant(nodeProxyChangedFunc)
 		}
 		{ what == \source } {
 			this.makeParameterSection()
 		}
 		{ what == \rebuild } {
-			updateInfoFunc.value(ndef);
+			updateInfoFunc.value(nodeProxy);
 			this.makeParameterSection();
 		}
 		{ what == \bus } {
-			updateInfoFunc.value(ndef)
+			updateInfoFunc.value(nodeProxy)
 		}
 		{ what == \clear } {
-			updateInfoFunc.value(ndef)
+			updateInfoFunc.value(nodeProxy)
 		}
 		{ what == \stop or: { what == \pause } } {
 			play.value_(0)
@@ -210,22 +210,22 @@ NodeProxyGui2 {
 		.scroll_step_(0.1) // mouse
 		.step_(0.1)        // keys
 		.action_({ | obj |
-			ndef.fadeTime = obj.value;
+			nodeProxy.fadeTime = obj.value;
 		});
 
 		channels = StaticText.new();
 
 		rate = StaticText.new();
 
-		updateInfoFunc = { | ndef |
-			fadeTime.value = ndef.fadeTime;
-			channels.string = "channels: %".format(ndef.numChannels);
-			rate.string = "rate: %".format(ndef.rate);
+		updateInfoFunc = { | np |
+			fadeTime.value = np.fadeTime;
+			channels.string = "channels: %".format(np.numChannels);
+			rate.string = "rate: %".format(np.rate);
 		};
-		updateInfoFunc.value(ndef);
+		updateInfoFunc.value(nodeProxy);
 
-		if(ndef.key.notNil, {
-			header = StaticText.new().string_(ndef.key)
+		if(nodeProxy.key.notNil, {
+			header = StaticText.new().string_(nodeProxy.key)
 		});
 
 		^VLayout.new(
@@ -244,19 +244,19 @@ NodeProxyGui2 {
 		])
 		.action_({ | obj |
 			if(obj.value == 1, {
-				ndef.play
+				nodeProxy.play
 			}, {
-				ndef.stop
+				nodeProxy.stop
 			})
 		})
-		.value_(ndef.isMonitoring.binaryValue);
+		.value_(nodeProxy.isMonitoring.binaryValue);
 
 		clear = Button.new()
 		.states_(#[
 			["clear"]
 		])
 		.action_({ | obj |
-			ndef.clear
+			nodeProxy.clear
 		});
 
 		send = Button.new()
@@ -264,7 +264,7 @@ NodeProxyGui2 {
 			["send"]
 		])
 		.action_({ | obj |
-			ndef.send
+			nodeProxy.send
 		});
 
 		scope = Button.new()
@@ -272,7 +272,7 @@ NodeProxyGui2 {
 			["scope"]
 		])
 		.action_({ | obj |
-			ndef.scope
+			nodeProxy.scope
 		});
 
 		free = Button.new()
@@ -280,7 +280,7 @@ NodeProxyGui2 {
 			["free"]
 		])
 		.action_({ | obj |
-			ndef.free
+			nodeProxy.free
 		});
 
 		popup = PopUpMenu.new()
@@ -297,8 +297,8 @@ NodeProxyGui2 {
 				0, { this.defaults() },
 				1, { this.randomize() },
 				2, { this.vary() },
-				3, { ndef.document },
-				4, { ndef.asCode.postln },
+				3, { nodeProxy.document },
+				4, { nodeProxy.asCode.postln },
 			)
 		})
 		.keyDownAction_({ | obj, char |
@@ -318,15 +318,15 @@ NodeProxyGui2 {
 		params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		params.clear;
 
-		ndef.controlKeysValues.pairsDo{ | key, val |
+		nodeProxy.controlKeysValues.pairsDo{ | key, val |
 			var spec;
 
 			spec = case
 			{ val.isNumber } {
-				(ndef.specs.at(key) ?? { Spec.specs.at(key) }).asSpec
+				(nodeProxy.specs.at(key) ?? { Spec.specs.at(key) }).asSpec
 			}
 			{ val.isArray } {
-				(ndef.specs.at(key) ?? { Spec.specs.at(key) }).asSpec.dup(val.size)
+				(nodeProxy.specs.at(key) ?? { Spec.specs.at(key) }).asSpec.dup(val.size)
 			}
 			{ val.isKindOf(Bus) } {
 				if(val.rate == \control, { \controlbus }, { \audiobus }).asSpec
@@ -361,12 +361,12 @@ NodeProxyGui2 {
 
 		view = View.new().layout_(VLayout.new());
 
-		if(ndef.monitor.notNil and: { ndef.rate == \audio }, {
+		if(nodeProxy.monitor.notNil and: { nodeProxy.rate == \audio }, {
 			volslider = Slider.new()
 			.orientation_(\horizontal)
-			.value_(ndef.vol)
+			.value_(nodeProxy.vol)
 			.action_({ | obj |
-				ndef.vol_(obj.value);
+				nodeProxy.vol_(obj.value);
 				volvalueBox.value_(obj.value);
 			});
 
@@ -378,9 +378,9 @@ NodeProxyGui2 {
 			.action_({ | obj |
 				obj.value = obj.value.clip(0.0, 1.0);
 				volslider.value_(obj.value);
-				ndef.vol_(obj.value);
+				nodeProxy.vol_(obj.value);
 			})
-			.value_(ndef.vol);
+			.value_(nodeProxy.vol);
 
 			volLayout = HLayout.new(
 				[vollabel, s: 1],
@@ -399,7 +399,7 @@ NodeProxyGui2 {
 				[StaticText.new().string_(key), s: 1],
 			);
 
-			paramVal = ndef.get(key);
+			paramVal = nodeProxy.get(key);
 
 			case
 
@@ -411,14 +411,14 @@ NodeProxyGui2 {
 				.action_({ | obj |
 					var val = spec.map(obj.value);
 					valueBox.value = val;
-					ndef.set(key, val);
+					nodeProxy.set(key, val);
 				});
 
 				valueBox = NumberBox.new()
 				.action_({ | obj |
 					var val = spec.constrain(obj.value);
 					slider.value_(spec.unmap(val));
-					ndef.set(key, val);
+					nodeProxy.set(key, val);
 				})
 				.decimals_(4)
 				.value_(spec.constrain(paramVal));
@@ -438,7 +438,7 @@ NodeProxyGui2 {
 					if(val.notNil, {
 						val = val.asArray.collect{ | v, i | spec.wrapAt(i).constrain(v) };
 						obj.value = val;
-						ndef.set(key, val);
+						nodeProxy.set(key, val);
 					});
 				})
 				.value_(paramVal);
@@ -456,7 +456,7 @@ NodeProxyGui2 {
 					var val = spec.constrain(obj.value).asInteger;
 					obj.value = val;
 					bus = Bus.new(paramVal.rate, val, paramVal.numChannels);
-					ndef.set(key, bus);
+					nodeProxy.set(key, bus);
 				})
 				.value_(paramVal.index);
 
@@ -478,7 +478,7 @@ NodeProxyGui2 {
 					obj.value = val;
 					buf = Buffer.cachedBufferAt(paramVal.server, val);
 					if(buf.notNil, {
-						ndef.set(key, buf);
+						nodeProxy.set(key, buf);
 					});
 				})
 				.value_(paramVal.bufnum);
@@ -528,23 +528,74 @@ NodeProxyGui2 {
 		font = Font.monospace(fontSize, bold: false, italic: false);
 	}
 
-	randomize { | randmin = 0.0, randmax = 1.0, except = #[] |
-		except = defaultIgnoreParams ++ ignoreParams ++ except;
-		ndef.randomizeAllParamsMapped(randmin, randmax, except)
+	randomize { | randmin = 0.0, randmax = 1.0 |
+		this.filteredParamsDo{ | val, spec |
+			spec.map(rrand(randmin, randmax))
+		}
 	}
 
-	vary { | deviation = 0.1, except = #[] |
-		except = defaultIgnoreParams ++ ignoreParams ++ except;
-		ndef.varyAllParamsMapped(deviation, except)
+	vary { | deviation = 0.1 |
+		this.filteredParamsDo{ | val, spec |
+			spec.map((spec.unmap(val) + 0.0.gauss(deviation)).clip(0, 1))
+		}
 	}
 
-	defaults { | except = #[] |
-		except = defaultIgnoreParams ++ ignoreParams ++ except;
-		ndef.setDefaults(except)
+	defaults {
+		this.filteredParamsDo{ | val, spec |
+			spec.default
+		}
 	}
+
+	ndef { ^nodeProxy }
 
 	close {
 		^window.close()
 	}
 
+	filteredParamsDo { | func|
+		this.filteredParams.keysValuesDo{ | key, spec |
+			var val;
+
+			val = nodeProxy.get(key);
+			if(val.isArray, {
+				val = val.collect{ | v | func.value(v, spec) }
+			}, {
+				val = func.value(val, spec)
+			});
+
+			nodeProxy.set(key, val)
+		}
+	}
+
+	filteredParams {
+		var accepted = IdentityDictionary.new;
+		var ignored;
+
+		ignored = defaultIgnoreParams ++ ignoreParams;
+
+		nodeProxy.controlKeysValues.pairsDo({ | key, val |
+			var ignore, spec;
+
+			ignore = ignored.any{ | ignoreParam |
+				if(ignoreParam.isString and:{ ignoreParam.indexOf($*).notNil }, {
+					ignoreParam.replace("*", ".*").addFirst($^).add($$).matchRegexp(key.asString)
+				}, {
+					ignoreParam.asSymbol == key
+				})
+			};
+			if(ignore.not, {
+				spec = (nodeProxy.specs.at(key) ?? { Spec.specs.at(key) }).asSpec;
+				if(val.isNumber, {
+					accepted.put(key, spec)
+				}, {
+					if(val.isArray, {
+						accepted.put(key, spec.dup(val.size))
+					})
+					// Buffer and Bus values are ignored
+				})
+			})
+		});
+
+		^accepted
+	}
 }

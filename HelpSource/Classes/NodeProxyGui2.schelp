@@ -1,12 +1,12 @@
 TITLE:: NodeProxyGui2
 SUMMARY:: Providing a modern alternative to the NodeProxy GUI
 CATEGORIES:: JITLib>GUI
-RELATED:: Classes/NdefGui, Classes/NdefParamGui
+RELATED:: Classes/NdefGui, Classes/NdefParamGui, Classes/NodeProxy
 
 
 DESCRIPTION::
 
-NodeProxyGui2 is a modernized alternative to the classic NodeProxy/Ndef GUI
+NodeProxyGui2 is a modernized alternative to the classic NodeProxy / Ndef GUI
 available in SuperCollider. It fixes a number of problems with the old GUI,
 improves some things and adds a few handy new features to its set.
 
@@ -27,7 +27,7 @@ CLASSMETHODS::
 METHOD:: new
 
 ARGUMENT:: nodeproxy
-An LINK::Classes/Ndef:: instance.
+An LINK::Classes/NodeProxy:: instance.
 
 ARGUMENT:: limitUpdateRate
 The higher this value, the slower the interface will update. In seconds. Default is CODE::0:: which mean instant updates.
@@ -46,37 +46,37 @@ NodeProxyGui2.defaultIgnoreParams = ["freq*", \pan];
 
 INSTANCEMETHODS::
 
-PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeParameterViews, ndefChanged, parameterChanged, setUpDependencies
+PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeParameterViews, nodeProxyChanged, parameterChanged, setUpDependencies, filteredParams, filteredParamsDo
+
+METHOD:: nodeProxy
+Access the LINK::Classes/NodeProxy:: / LINK::Classes/Ndef:: belonging to this GUI.
+
+METHOD:: ndef
+Alias for LINK::#-nodeProxy::
 
 METHOD:: ignoreParams
 Get or set the parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults:: on this instance. Expects an LINK::Classes/Array:: of symbols or strings. Wildcards (*) are supported.
 
 METHOD:: randomize
-Set parameters to random values. This will use LINK::Classes/ControlSpec::s stored in CODE::Spec.specs:: to figure out the range.
+Set parameters to random values.
+NOTE::Parameters listed in either LINK::#-ignoreParams:: or in LINK::#*defaultIgnoreParams:: will be excluded.::
 
 ARGUMENT:: randmin
-A LINK::Classes/Float::.
+A normalized LINK::Classes/Float::.
 
 ARGUMENT:: randmax
-A LINK::Classes/Float::.
-
-ARGUMENT:: except
-An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::. Wildcards (*) are supported.
+A normalized LINK::Classes/Float::.
 
 METHOD:: vary
-Set parameters to nearby random values - gaussian distribution. This will use LINK::Classes/ControlSpec::s stored in CODE::Spec.specs:: to figure out the range.
+Set parameters to nearby random values - gaussian distribution.
+NOTE::Parameters listed in either LINK::#-ignoreParams:: or in LINK::#*defaultIgnoreParams:: will be excluded.::
 
 ARGUMENT:: deviation
-In percent.
-
-ARGUMENT:: except
-An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::. Wildcards (*) are supported.
+A normalized LINK::Classes/Float::.
 
 METHOD:: defaults
-Set parameters to LINK::Classes/ControlSpec:: default values. Specs are looked up in CODE::Spec.specs::. If not found CODE::ControlSpec(0.0, 1.0, 'linear', 0.0, 0.0, ""):: will be used.
-
-ARGUMENT:: except
-An LINK::Classes/Array:: of symbols or strings specifying which parameters to exclude. See LINK::Classes/NodeProxy#-controlKeys::. Wildcards (*) are supported.
+Set parameters to LINK::Classes/ControlSpec:: default values. Specs are first looked up in the node proxy's spec, and then in CODE::Spec.specs::.
+NOTE::Parameters listed in either LINK::#-ignoreParams:: or in LINK::#*defaultIgnoreParams:: will be excluded.::
 
 METHOD:: close
 Closes the window.
@@ -97,11 +97,9 @@ Ndef(\yiyi, {|freq=300, amp=0.5, pan=0|
 // .gui2 returns the GUI, allowing you to further manipulate it later on, or simply close it
 g = Ndef(\yiyi).gui2;
 
-Ndef(\yiyi).randomizeAllParamsMapped;
+g.randomize;
 
 // don't randomize excluded parameters
-Ndef(\yiyi).randomizeAllParamsMapped(except: [\amp]);
-// or similar
 g.ignoreParams = [\amp];
 g.randomize;
 
