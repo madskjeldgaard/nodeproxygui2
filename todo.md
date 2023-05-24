@@ -16,9 +16,5 @@
 - Drag and drop values between `NumberBoxes`
 - Drag and drop NodeProxies to NumberBoxes internally and externally between guis,
 
-## Needed before v1.0 (release)
-- v1.0 in quarkfile
-
 ## Ideas
 - add mute / solo button (used instead of Ndef.pause,-.resume)
-- 
