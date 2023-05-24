@@ -37,10 +37,10 @@ A non-zero limitUpdateRate will reduce the CPU cost of updating GUI elements. If
 
 
 METHOD:: defaultIgnoreParams
-Parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults::. Expects an LINK::Classes/Array:: of symbols or strings. Wildcards (*) are supported.
+Parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults::. Expects an LINK::Classes/Array:: of symbols or strings. Wildcards (*) and Perl Regular Expression Syntax .[{}()\*+?|^$ are supported.
 
 CODE::
-NodeProxyGui2.defaultIgnoreParams = ["freq*", \pan];
+NodeProxyGui2.defaultIgnoreParams = ["freq*", "^[Ff]eedback.*", "*[Gg]ain\\b" \pan];
 ::
 
 
