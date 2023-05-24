@@ -1,6 +1,6 @@
 # NodeProxyGui2
 
-![ndefgui2 in action](ndefgui2.gif)
+![ndefgui2 in action](https://oddodd.org/git-readme-assets/ndefgui2.gif)
 
 An alternative to SuperCollider's built-in (and partly broken) Ndef.gui method.
 

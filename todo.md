@@ -17,7 +17,6 @@
 - Drag and drop NodeProxies to NumberBoxes internally and externally between guis,
 
 ## Needed before v1.0 (release)
-- New gif in README
 - v1.0 in quarkfile
 
 ## Ideas
