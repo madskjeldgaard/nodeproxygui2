@@ -16,7 +16,7 @@ g = Ndef(\abc).gui2;
 g.close;
 
 // dont randomize/vary ignored parameters
-NodeProxyGui2.defaultIgnoreParams_([\amp, "freq*", "*F*"]) // wildcard freq args
+NodeProxyGui2.defaultIgnoreParams_([\amp, "freq*", "*[fF]eedback\\b"])  // wildcard (regex) args
 
 (
 f = 9;
