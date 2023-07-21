@@ -602,7 +602,7 @@ NodeProxyGui2 {
 
 			val = nodeProxy.get(key);
 			if(val.isArray, {
-				val = val.collect{ | v | func.value(v, spec) }
+				val = val.collect{ | v, n | func.value(v, spec.wrapAt(n)) }
 			}, {
 				val = func.value(val, spec)
 			});
