@@ -77,11 +77,16 @@ NodeProxyGui2 {
 			}, limitUpdateRate, clock: AppClock);
 			{ | obj ...args |
 				var key = args[0];
-				if(key == \set, {
-					key = (key ++ args[1][0]).asSymbol;
-				});
-				limitOrder.add(key);
-				limitDict.put(key, args);
+				if(key == \set) {
+					args[1].pairsDo { | paramKey, v |
+						key = (key ++ paramKey).asSymbol;
+						limitOrder.add(key);
+						limitDict.put(key, [\set, [paramKey, v]]);
+					}
+				} {
+					limitOrder.add(key);
+					limitDict.put(key, args);
+				}
 			}
 
 		}, {
@@ -115,9 +120,11 @@ NodeProxyGui2 {
 			if(key == \fadeTime, {
 				updateInfoFunc.value(nodeProxy)
 			}, {
-				if(params[key].notNil, {
-					this.parameterChanged(key, args[1])
-				})
+				args.pairsDo { | paramKey, val |
+					if(params[key].notNil, {
+						this.parameterChanged(paramKey, val)
+					})
+				}
 			})
 		}
 		{ what == \vol } {
