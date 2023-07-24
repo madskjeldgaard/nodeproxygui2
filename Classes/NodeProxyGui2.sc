@@ -2,11 +2,11 @@ NodeProxyGui2 {
 
 	classvar <>defaultIgnoreParams = #[];
 
-	var <>ignoreParams;
-	var <window;
-
 	var <nodeProxy;
 	var params, paramViews;
+
+	var <>ignoreParams;
+	var <window;
 
 	var play, volslider, volvalueBox;
 	var header, parameterSection;
@@ -17,12 +17,11 @@ NodeProxyGui2 {
 	var nodeProxyChangedFunc, specChangedFunc;
 
 	// this is a normal constructor method
-	*new { | nodeproxy, limitUpdateRate = 0 |
-		^super.new.init(nodeproxy, limitUpdateRate)
+	*new { | nodeproxy, limitUpdateRate = 0, show = true |
+		^super.newCopyArgs(nodeproxy).init(limitUpdateRate, show)
 	}
 
-	init { | argNodeProxy, limitUpdateRate |
-		nodeProxy = argNodeProxy;
+	init { | limitUpdateRate, show |
 
 		this.initFonts();
 
@@ -42,8 +41,12 @@ NodeProxyGui2 {
 
 		this.makeParameterSection();
 
-		window.front;
+		if (show) {
+			window.front;
+		}
 	}
+
+	asView { ^window.asView }
 
 	setUpDependencies { | limitUpdateRate |
 		var limitOrder, limitDict, limitScheduler;
