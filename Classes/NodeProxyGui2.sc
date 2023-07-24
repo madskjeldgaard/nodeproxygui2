@@ -179,9 +179,16 @@ NodeProxyGui2 {
 		{ val.isArray } {
 			if(paramViews[key][\type] != \array, { this.makeParameterSection() });
 			spec = params[key].value;
-			paramViews[key][\textField].value_(val.collect{ | v, i |
-				spec.wrapAt(i).constrain(v);
-			});
+			if(val.every(_.isNumber)) {
+				val.do { | v, i |
+					paramViews[key][\numBoxes].wrapAt(i).value = spec.wrapAt(i).constrain(v);
+					paramViews[key][\sliders].wrapAt(i).value = spec.wrapAt(i).unmap(v)
+				};
+			} {
+				paramViews[key][\textField].value_(val.collect{ | v, i |
+					spec.wrapAt(i).constrain(v);
+				});
+			};
 		}
 		{ val.isKindOf(Bus) } {
 			if(paramViews[key][\type] != \bus, { this.makeParameterSection() });
@@ -402,11 +409,18 @@ NodeProxyGui2 {
 			var layout, paramVal;
 			var slider, valueBox, textField, staticText;
 
-			layout = HLayout.new(
-				[StaticText.new().string_(key), s: 1],
-			);
-
 			paramVal = nodeProxy.get(key);
+
+			layout = HLayout.new(
+				if (paramVal.isArray and: { paramVal.every(_.isNumber) }) {
+					[VLayout(*paramVal.collect { | v, n |
+						StaticText.new().string_(key++"["++n++"]")
+					}), s: 1]
+
+				} {
+					[StaticText.new().string_(key), s: 1]
+				}
+			);
 
 			case
 
@@ -437,6 +451,36 @@ NodeProxyGui2 {
 				layout.add(slider, 4);
 			}
 
+			{ paramVal.isArray and: { paramVal.every(_.isNumber) } } {
+
+				var sliders, valueBoxes;
+				sliders = paramVal.collect { |val, n|
+					Slider.new()
+					.orientation_(\horizontal)
+					.value_(spec.wrapAt(n).unmap(val))
+					.action_({ | obj |
+						var val = spec.wrapAt(n).map(obj.value);
+						valueBoxes[n].value = val;
+						nodeProxy.seti(key, n, val);
+					});
+				};
+
+				valueBoxes = paramVal.collect { |pVal, n|
+					NumberBox.new()
+					.action_({ | obj |
+						var val = spec.wrapAt(n).constrain(obj.value);
+						sliders[n].value_(spec.wrapAt(n).unmap(val));
+						nodeProxy.set(key, val);
+					})
+					.decimals_(4)
+					.value_(spec.wrapAt(n).constrain(pVal));
+				};
+
+				paramViews.put(key, (type: \array, sliders: sliders, numBoxes: valueBoxes));
+				layout.add(VLayout(*valueBoxes), 1);
+				layout.add(VLayout(*sliders), 4);
+			}
+			
 			{ paramVal.isArray } {
 
 				textField = TextField.new()
@@ -565,7 +609,7 @@ NodeProxyGui2 {
 
 			val = nodeProxy.get(key);
 			if(val.isArray, {
-				val = val.collect{ | v | func.value(v, spec) }
+				val = val.collect{ | v, n | func.value(v, spec.wrapAt(n)) }
 			}, {
 				val = func.value(val, spec)
 			});
