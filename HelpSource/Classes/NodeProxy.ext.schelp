@@ -8,4 +8,8 @@ Creates a GUI for this NodeProxy. Shortcut for CODE::NodeProxyGui2.new(thisNodeP
 ARGUMENT:: limitUpdateRate
 The higher this value, the slower the interface will update. In seconds. Default is CODE::0:: which mean instant updates.
 
+ARGUMENT:: show
+If CODE::false::, don't display the window immediately, so that it can be
+embedded in other GUIs. Default is CODE::true::.
+
 RETURNS:: a LINK::Classes/NodeProxyGui2:: instance.
