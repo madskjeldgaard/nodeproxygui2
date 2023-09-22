@@ -6,7 +6,7 @@ NodeProxyGui2 {
 	var <nodeProxy;
 	var params, paramViews;
 
-	var <>excludeParams;
+	var prExcludeParams;
 	var <>ignoreParams;
 	var <window;
 
@@ -334,7 +334,7 @@ NodeProxyGui2 {
 	}
 
 	makeParameterSection {
-		var excluded = defaultExcludeParams ++ excludeParams;
+		var excluded = defaultExcludeParams ++ prExcludeParams;
 
 		params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		params.clear;
@@ -601,6 +601,13 @@ NodeProxyGui2 {
 		}
 	}
 
+	excludeParams { ^prExcludeParams}
+
+	excludeParams_ {| value |
+		prExcludeParams = value;
+		{ this.makeParameterSection() }.defer;
+	}
+
 	defaults {
 		this.filteredParamsDo{ | val, spec |
 			spec.default
@@ -632,7 +639,7 @@ NodeProxyGui2 {
 		var accepted = IdentityDictionary.new;
 		var ignored;
 
-		ignored = defaultIgnoreParams ++ ignoreParams ++ defaultExcludeParams ++ excludeParams;
+		ignored = defaultIgnoreParams ++ ignoreParams ++ defaultExcludeParams ++ prExcludeParams;
 
 		nodeProxy.controlKeysValues.pairsDo({ | key, val |
 			var spec;
