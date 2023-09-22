@@ -126,7 +126,7 @@ NodeProxyGui2 {
 				updateInfoFunc.value(nodeProxy)
 			}, {
 				args.pairsDo { | paramKey, val |
-					if(params[key].notNil, {
+					if(params[paramKey].notNil, {
 						this.parameterChanged(paramKey, val)
 					})
 				}
@@ -601,7 +601,7 @@ NodeProxyGui2 {
 		}
 	}
 
-	excludeParams { ^prExcludeParams}
+	excludeParams { ^prExcludeParams }
 
 	excludeParams_ {| value |
 		prExcludeParams = value;
