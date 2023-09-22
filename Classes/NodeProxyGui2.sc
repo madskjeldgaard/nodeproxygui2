@@ -473,7 +473,7 @@ NodeProxyGui2 {
 					.action_({ | obj |
 						var val = spec.wrapAt(n).constrain(obj.value);
 						sliders[n].value_(spec.wrapAt(n).unmap(val));
-						nodeProxy.set(key, val);
+						nodeProxy.seti(key, n, val);
 					})
 					.decimals_(4)
 					.value_(spec.wrapAt(n).constrain(pVal));
