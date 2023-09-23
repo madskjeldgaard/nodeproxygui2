@@ -12,4 +12,7 @@ ARGUMENT:: show
 If CODE::false::, don't display the window immediately, so that it can be
 embedded in other GUIs. Default is CODE::true::.
 
+ARGUMENT:: collapseArray
+When CODE::true::, arrays of parameters will be shown as single line LINK::Classes/TextField::s. The default (CODE::false::) will show arrays of parameters as separate silders.
+
 RETURNS:: a LINK::Classes/NodeProxyGui2:: instance.
