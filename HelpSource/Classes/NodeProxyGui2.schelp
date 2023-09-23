@@ -39,6 +39,8 @@ embedded in other GUIs. Default is CODE::true::.
 DISCUSSION::
 A non-zero limitUpdateRate will reduce the CPU cost of updating GUI elements. If there are many parameters continuously updated - say from a bunch of noisy sensor readings, a resonable limit is CODE::0.1::. That will force the GUI elements to only redraw ten times per second. CODE::0.1:: is also what the standard LINK::Classes/NdefGui:: uses internally. The limitUpdateRate can also be specified as an argument to the LINK::Classes/NodeProxy#-gui2:: method.
 
+METHOD:: defaultExcludeParams
+Parameters to be excluded. No GUI widgets will be created for these parameters. Expects an LINK::Classes/Array:: of symbols or strings. Wildcards (*) and Perl Regular Expression Syntax .[{}()\*+?|^$ are supported.
 
 METHOD:: defaultIgnoreParams
 Parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults::. Expects an LINK::Classes/Array:: of symbols or strings. Wildcards (*) and Perl Regular Expression Syntax .[{}()\*+?|^$ are supported.
@@ -50,13 +52,16 @@ NodeProxyGui2.defaultIgnoreParams = ["freq*", "^[Ff]eedback.*", "*[Gg]ain\\b" \p
 
 INSTANCEMETHODS::
 
-PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeParameterViews, nodeProxyChanged, parameterChanged, setUpDependencies, filteredParams, filteredParamsDo
+PRIVATE:: init, initFonts, makeInfoSection, makeTransportSection, makeParameterSection, makeParameterViews, nodeProxyChanged, parameterChanged, setUpDependencies, filteredParams, filteredParamsDo, paramPresentInArray
 
 METHOD:: nodeProxy
 Access the LINK::Classes/NodeProxy:: / LINK::Classes/Ndef:: belonging to this GUI.
 
 METHOD:: ndef
 Alias for LINK::#-nodeProxy::
+
+METHOD:: excludeParams
+Get or set the parameters to be excluded. No GUI widgets will be created for these parameters. Expects an LINK::Classes/Array:: of symbols or strings. Wildcards (*) are supported.
 
 METHOD:: ignoreParams
 Get or set the parameters to be ignored when calling LINK::#-randomize::, LINK::#-vary:: or LINK::#-defaults:: on this instance. Expects an LINK::Classes/Array:: of symbols or strings. Wildcards (*) are supported.
@@ -126,14 +131,14 @@ win.front;
 (
 var win = Window("an ndef and something else");
 var graphics = UserView().drawFunc_({ |v|
-	{:Rect(x,y,20.rand,20.rand), 
+	{:Rect(x,y,20.rand,20.rand),
 		x <- (0,20..v.bounds.width), y <- (0,20..v.bounds.height)
 	}.do { |r|
 		Pen.fillColor_(Color.rand).fillOval(r)
 	}
 });
 win.view.layout = VLayout(
-	[graphics, s: 2], 
+	[graphics, s: 2],
 	NodeProxyGui2(Ndef(\yiyi), show: false)
 );
 win.front

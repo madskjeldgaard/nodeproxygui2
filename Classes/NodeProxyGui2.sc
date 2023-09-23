@@ -1,10 +1,12 @@
 NodeProxyGui2 {
 
+	classvar <>defaultExcludeParams = #[];
 	classvar <>defaultIgnoreParams = #[];
 
 	var <nodeProxy;
 	var params, paramViews;
 
+	var prExcludeParams;
 	var <>ignoreParams;
 	var <window;
 
@@ -124,7 +126,7 @@ NodeProxyGui2 {
 				updateInfoFunc.value(nodeProxy)
 			}, {
 				args.pairsDo { | paramKey, val |
-					if(params[key].notNil, {
+					if(params[paramKey].notNil, {
 						this.parameterChanged(paramKey, val)
 					})
 				}
@@ -332,36 +334,41 @@ NodeProxyGui2 {
 	}
 
 	makeParameterSection {
+		var excluded = defaultExcludeParams ++ prExcludeParams;
+
 		params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		params.clear;
 
 		nodeProxy.controlKeysValues.pairsDo{ | key, val |
 			var spec;
 
-			spec = case
-			{ val.isNumber } {
-				(nodeProxy.specs.at(key) ?? { Spec.specs.at(key) }).asSpec
-			}
-			{ val.isArray } {
-				(nodeProxy.specs.at(key) ?? { Spec.specs.at(key) }).asSpec.dup(val.size)
-			}
-			{ val.isKindOf(Bus) } {
-				if(val.rate == \control, { \controlbus }, { \audiobus }).asSpec
-			}
-			{ val.isKindOf(Buffer) } {
-				ControlSpec.new(0, Server.default.options.numBuffers - 1, 'lin', 1)
-			}
-			{ val.isKindOf(NodeProxy) } {
-				nil.asSpec
-			}
-			{
-				"% using generic spec for '%'".format(this.class, key).warn;
-				nil.asSpec
-			};
+			if(this.paramPresentInArray(key, excluded).not, {
 
-			// "Spec for paramname %: %".format(key, spec).postln;
-			spec.addDependant(specChangedFunc);
-			params.put(key, spec);
+				spec = case
+				{ val.isNumber } {
+					(nodeProxy.specs.at(key) ?? { Spec.specs.at(key) }).asSpec
+				}
+				{ val.isArray } {
+					(nodeProxy.specs.at(key) ?? { Spec.specs.at(key) }).asSpec.dup(val.size)
+				}
+				{ val.isKindOf(Bus) } {
+					if(val.rate == \control, { \controlbus }, { \audiobus }).asSpec
+				}
+				{ val.isKindOf(Buffer) } {
+					ControlSpec.new(0, Server.default.options.numBuffers - 1, 'lin', 1)
+				}
+				{ val.isKindOf(NodeProxy) } {
+					nil.asSpec
+				}
+				{
+					"% using generic spec for '%'".format(this.class, key).warn;
+					nil.asSpec
+				};
+
+				// "Spec for paramname %: %".format(key, spec).postln;
+				spec.addDependant(specChangedFunc);
+				params.put(key, spec);
+			});
 		};
 
 		if(parameterSection.notNil, { parameterSection.remove });
@@ -483,7 +490,7 @@ NodeProxyGui2 {
 				layout.add(VLayout(*valueBoxes), 1);
 				layout.add(VLayout(*sliders), 4);
 			}
-			
+
 			{ paramVal.isArray } {
 
 				textField = TextField.new()
@@ -594,6 +601,13 @@ NodeProxyGui2 {
 		}
 	}
 
+	excludeParams { ^prExcludeParams }
+
+	excludeParams_ {| value |
+		prExcludeParams = value;
+		{ this.makeParameterSection() }.defer;
+	}
+
 	defaults {
 		this.filteredParamsDo{ | val, spec |
 			spec.default
@@ -606,7 +620,7 @@ NodeProxyGui2 {
 		^window.close()
 	}
 
-	filteredParamsDo { | func|
+	filteredParamsDo { | func |
 		this.filteredParams.keysValuesDo{ | key, spec |
 			var val;
 
@@ -625,19 +639,12 @@ NodeProxyGui2 {
 		var accepted = IdentityDictionary.new;
 		var ignored;
 
-		ignored = defaultIgnoreParams ++ ignoreParams;
+		ignored = defaultIgnoreParams ++ ignoreParams ++ defaultExcludeParams ++ prExcludeParams;
 
 		nodeProxy.controlKeysValues.pairsDo({ | key, val |
-			var ignore, spec;
+			var spec;
 
-			ignore = ignored.any{ | ignoreParam |
-				if(ignoreParam.isString and:{ ignoreParam.indexOf($*).notNil }, {
-					ignoreParam.replace("*", ".*").addFirst($^).add($$).matchRegexp(key.asString)
-				}, {
-					ignoreParam.asSymbol == key
-				})
-			};
-			if(ignore.not, {
+			if(this.paramPresentInArray(key, ignored).not, {
 				spec = (nodeProxy.specs.at(key) ?? { Spec.specs.at(key) }).asSpec;
 				if(val.isNumber, {
 					accepted.put(key, spec)
@@ -651,5 +658,15 @@ NodeProxyGui2 {
 		});
 
 		^accepted
+	}
+
+	paramPresentInArray { | key, array |
+		^array.any{ | param |
+			if(param.isString and:{ param.indexOf($*).notNil }, {
+				param.replace("*", ".*").addFirst($^).add($$).matchRegexp(key.asString)
+			}, {
+				param.asSymbol == key
+			})
+		}
 	}
 }
