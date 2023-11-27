@@ -4,6 +4,7 @@ NodeProxyGui2 {
 	classvar <>defaultIgnoreParams = #[];
 
 	var <nodeProxy;
+	var collapseArrays;
 	var params, paramViews;
 
 	var prExcludeParams;
@@ -19,8 +20,8 @@ NodeProxyGui2 {
 	var nodeProxyChangedFunc, specChangedFunc;
 
 	// this is a normal constructor method
-	*new { | nodeproxy, limitUpdateRate = 0, show = true |
-		^super.newCopyArgs(nodeproxy).init(limitUpdateRate, show)
+	*new { | nodeproxy, limitUpdateRate = 0, show = true, collapseArrays = false |
+		^super.newCopyArgs(nodeproxy, collapseArrays).init(limitUpdateRate, show)
 	}
 
 	init { | limitUpdateRate, show |
@@ -43,7 +44,7 @@ NodeProxyGui2 {
 
 		this.makeParameterSection();
 
-		if (show) {
+		if(show) {
 			window.front;
 		}
 	}
@@ -59,7 +60,7 @@ NodeProxyGui2 {
 			if(args[0] == \add, {
 				key = args[1][0];
 				spec = args[1][1];
-				if(params[key].notNil and:{ params[key] != spec }, {
+				if(params[key].notNil and: { params[key] != spec }, {
 					{ this.makeParameterSection() }.defer;
 				})
 			})
@@ -184,16 +185,16 @@ NodeProxyGui2 {
 		{ val.isArray } {
 			if(paramViews[key][\type] != \array, { this.makeParameterSection() });
 			spec = params[key].value;
-			if(val.every(_.isNumber)) {
+			if(collapseArrays.not and: { val.every(_.isNumber) }, {
 				val.do { | v, i |
 					paramViews[key][\numBoxes].wrapAt(i).value = spec.wrapAt(i).constrain(v);
 					paramViews[key][\sliders].wrapAt(i).value = spec.wrapAt(i).unmap(v)
 				};
-			} {
+			}, {
 				paramViews[key][\textField].value_(val.collect{ | v, i |
 					spec.wrapAt(i).constrain(v);
 				});
-			};
+			});
 		}
 		{ val.isKindOf(Bus) } {
 			if(paramViews[key][\type] != \bus, { this.makeParameterSection() });
@@ -422,14 +423,14 @@ NodeProxyGui2 {
 			paramVal = nodeProxy.get(key);
 
 			layout = HLayout.new(
-				if (paramVal.isArray and: { paramVal.every(_.isNumber) }) {
+				if(collapseArrays.not and: { paramVal.isArray and: { paramVal.every(_.isNumber) } }, {
 					[VLayout(*paramVal.collect { | v, n |
 						StaticText.new().string_(key++"["++n++"]")
 					}), s: 1]
 
-				} {
+				}, {
 					[StaticText.new().string_(key), s: 1]
-				}
+				});
 			);
 
 			case
@@ -461,7 +462,7 @@ NodeProxyGui2 {
 				layout.add(slider, 4);
 			}
 
-			{ paramVal.isArray and: { paramVal.every(_.isNumber) } } {
+			{ collapseArrays.not and: { paramVal.isArray and: { paramVal.every(_.isNumber) } } } {
 
 				var sliders, valueBoxes;
 				sliders = paramVal.collect { |val, n|
@@ -662,7 +663,7 @@ NodeProxyGui2 {
 
 	paramPresentInArray { | key, array |
 		^array.any{ | param |
-			if(param.isString and:{ param.indexOf($*).notNil }, {
+			if(param.isString and: { param.indexOf($*).notNil }, {
 				param.replace("*", ".*").addFirst($^).add($$).matchRegexp(key.asString)
 			}, {
 				param.asSymbol == key
