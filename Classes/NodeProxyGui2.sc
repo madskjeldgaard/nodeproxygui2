@@ -419,6 +419,7 @@ NodeProxyGui2 {
 		params.sortedKeysValuesDo{ | key, spec |
 			var layout, paramVal;
 			var slider, valueBox, textField, staticText;
+			var sliders, valueBoxes;
 
 			paramVal = nodeProxy.get(key);
 
@@ -464,7 +465,6 @@ NodeProxyGui2 {
 
 			{ collapseArrays.not and: { paramVal.isArray and: { paramVal.every(_.isNumber) } } } {
 
-				var sliders, valueBoxes;
 				sliders = paramVal.collect { |val, n|
 					Slider.new()
 					.orientation_(\horizontal)
