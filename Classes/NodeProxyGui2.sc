@@ -336,6 +336,7 @@ NodeProxyGui2 {
 
 	makeParameterSection {
 		var excluded = defaultExcludeParams ++ prExcludeParams;
+		var numParams = params.size;
 
 		params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		params.clear;
@@ -378,7 +379,9 @@ NodeProxyGui2 {
 			parameterSection = ScrollView.new().canvas_(parameterSection);
 		});
 		window.layout.add(parameterSection, 1);
-		{ window.view.resizeToHint }.defer(0.07);
+		if(numParams != params.size, {
+			{ window.view.resizeToHint }.defer(0.07);
+		});
 	}
 
 	makeParameterViews {
