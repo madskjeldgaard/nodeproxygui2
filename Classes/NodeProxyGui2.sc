@@ -375,11 +375,13 @@ NodeProxyGui2 {
 
 		if(parameterSection.notNil, { parameterSection.remove });
 		parameterSection = this.makeParameterViews().resizeToHint;
-		if(parameterSection.bounds.height > (Window.availableBounds.height * 0.5), {
+		if((parameterSection.bounds.height + window.view.children[0].bounds.height) > (Window.availableBounds.height), {
 			parameterSection = ScrollView.new().canvas_(parameterSection);
-		});
-		window.layout.add(parameterSection, 1);
-		if(numParams != params.size, {
+			window.view.bounds_(Rect(0,0,window.bounds.width,Window.availableBounds.height));
+			window.layout.add(parameterSection, 1);
+		}, {
+			window.view.bounds_(Rect(0,0,window.bounds.width,Window.availableBounds.height).center_(Window.availableBounds.center));
+			window.layout.add(parameterSection, 1);
 			{ window.view.resizeToHint }.defer(0.07);
 		});
 	}
