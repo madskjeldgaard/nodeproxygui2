@@ -336,7 +336,7 @@ NodeProxyGui2 {
 
 	makeParameterSection {
 		var excluded = defaultExcludeParams ++ prExcludeParams;
-		var numParams = params.size;
+		var numParams = params.flatSize;
 
 		params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		params.clear;
@@ -374,13 +374,18 @@ NodeProxyGui2 {
 		};
 
 		if(parameterSection.notNil, { parameterSection.remove });
-		parameterSection = this.makeParameterViews().resizeToHint;
-		if(parameterSection.bounds.height > (Window.availableBounds.height * 0.5), {
-			parameterSection = ScrollView.new().canvas_(parameterSection);
-		});
+		parameterSection = this.makeParameterViews();
 		window.layout.add(parameterSection, 1);
-		if(numParams != params.size, {
-			{ window.view.resizeToHint }.defer(0.07);
+
+		if(numParams != params.flatSize, {
+			window.view.resizeToHint;
+			{
+				window.view.resizeToHint;  //no idea why this is needed twice
+				if(window.view.bounds.height > Window.availableBounds.height, {
+					parameterSection = ScrollView.new().canvas_(parameterSection);
+					window.layout.add(parameterSection, 1);
+				});
+			}.defer(0.07);
 		});
 	}
 
