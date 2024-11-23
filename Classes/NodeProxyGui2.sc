@@ -501,7 +501,7 @@ NodeProxyGui2 {
 				};
 
 				paramViews.put(key, (type: \array, sliders: sliders, numBoxes: valueBoxes));
-				layout.add(VLayout(*valueBoxes), 1);
+				layout.add(VLayout(*valueBoxes.collect{|v| [nil, v, nil]}.flat), 1);
 				layout.add(VLayout(*sliders), 4);
 			}
 
