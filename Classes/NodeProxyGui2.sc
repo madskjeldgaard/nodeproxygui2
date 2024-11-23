@@ -15,7 +15,7 @@ NodeProxyGui2 {
 	var header, parameterSection;
 	var updateInfoFunc;
 
-	var font, headerFont;
+	var font, headerFont, headerHeight;
 
 	var nodeProxyChangedFunc, specChangedFunc;
 
@@ -39,6 +39,7 @@ NodeProxyGui2 {
 		);
 
 		window.view.children.do{ | c | c.font = if(c == header, headerFont, font) };
+		headerHeight = window.view.sizeHint.height;
 
 		this.setUpDependencies(limitUpdateRate.max(0));
 
@@ -337,6 +338,7 @@ NodeProxyGui2 {
 	makeParameterSection {
 		var excluded = defaultExcludeParams ++ prExcludeParams;
 		var numParams = params.flatSize;
+		var newHeight;
 
 		params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		params.clear;
@@ -377,15 +379,18 @@ NodeProxyGui2 {
 		parameterSection = this.makeParameterViews();
 		window.layout.add(parameterSection, 1);
 
-		if(numParams != params.flatSize, {
-			window.view.resizeToHint;
-			{
-				window.view.resizeToHint;  //no idea why this is needed twice
-				if(window.view.bounds.height > Window.availableBounds.height, {
-					parameterSection = ScrollView.new().canvas_(parameterSection);
-					window.layout.add(parameterSection, 1);
-				});
-			}.defer(0.07);
+		newHeight = headerHeight + 30 + parameterSection.sizeHint.height;
+		if(newHeight > Window.availableBounds.height, {
+			parameterSection = ScrollView.new().canvas_(parameterSection);
+			window.layout.add(parameterSection, 1);
+			window.view.bounds = window.view.bounds.resizeTo(
+				window.view.bounds.width,
+				Window.availableBounds.height
+			);
+		}, {
+			if(numParams != params.flatSize, {
+				window.view.resizeToHint;
+			});
 		});
 	}
 
