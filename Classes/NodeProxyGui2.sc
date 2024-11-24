@@ -338,7 +338,7 @@ NodeProxyGui2 {
 	makeParameterSection {
 		var excluded = defaultExcludeParams ++ prExcludeParams;
 		var numParams = params.flatSize;
-		var newHeight;
+		var sectionSize;
 
 		params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		params.clear;
@@ -377,20 +377,16 @@ NodeProxyGui2 {
 
 		if(parameterSection.notNil, { parameterSection.remove });
 		parameterSection = this.makeParameterViews();
+		sectionSize = parameterSection.sizeHint;
+		parameterSection = ScrollView.new().canvas_(parameterSection);
 		window.layout.add(parameterSection, 1);
 
-		newHeight = headerHeight + 30 + parameterSection.sizeHint.height;
-		if(newHeight > Window.availableBounds.height, {
-			parameterSection = ScrollView.new().canvas_(parameterSection);
-			window.layout.add(parameterSection, 1);
+		if(window.view.parent.isNil, {  //resize only when not embedded
 			window.view.bounds = window.view.bounds.resizeTo(
 				window.view.bounds.width,
-				Window.availableBounds.height
+				(sectionSize.height + headerHeight + 30)  //30 compensate default spacing
+				.min(Window.availableBounds.height)
 			);
-		}, {
-			if(numParams != params.flatSize, {
-				window.view.resizeToHint;
-			});
 		});
 	}
 
