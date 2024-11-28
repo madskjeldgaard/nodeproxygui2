@@ -15,7 +15,7 @@ NodeProxyGui2 {
 	var header, parameterSection;
 	var updateInfoFunc;
 
-	var font, headerFont;
+	var font, headerFont, headerHeight;
 
 	var nodeProxyChangedFunc, specChangedFunc;
 
@@ -39,6 +39,7 @@ NodeProxyGui2 {
 		);
 
 		window.view.children.do{ | c | c.font = if(c == header, headerFont, font) };
+		headerHeight = window.view.sizeHint.height;
 
 		this.setUpDependencies(limitUpdateRate.max(0));
 
@@ -336,7 +337,8 @@ NodeProxyGui2 {
 
 	makeParameterSection {
 		var excluded = defaultExcludeParams ++ prExcludeParams;
-		var numParams = params.size;
+		var numParams = params.flatSize;
+		var sectionSize;
 
 		params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		params.clear;
@@ -374,13 +376,17 @@ NodeProxyGui2 {
 		};
 
 		if(parameterSection.notNil, { parameterSection.remove });
-		parameterSection = this.makeParameterViews().resizeToHint;
-		if(parameterSection.bounds.height > (Window.availableBounds.height * 0.5), {
-			parameterSection = ScrollView.new().canvas_(parameterSection);
-		});
+		parameterSection = this.makeParameterViews();
+		sectionSize = parameterSection.sizeHint;
+		parameterSection = ScrollView.new().canvas_(parameterSection);
 		window.layout.add(parameterSection, 1);
-		if(numParams != params.size, {
-			{ window.view.resizeToHint }.defer(0.07);
+
+		if(window.view.parent.isNil, {  //resize only when not embedded
+			window.view.bounds = window.view.bounds.resizeTo(
+				window.view.bounds.width,
+				(sectionSize.height + headerHeight + 30)  //30 compensate default spacing
+				.min(Window.availableBounds.height)
+			);
 		});
 	}
 
@@ -491,7 +497,7 @@ NodeProxyGui2 {
 				};
 
 				paramViews.put(key, (type: \array, sliders: sliders, numBoxes: valueBoxes));
-				layout.add(VLayout(*valueBoxes), 1);
+				layout.add(VLayout(*valueBoxes.collect{|v| [nil, v, nil]}.flat), 1);
 				layout.add(VLayout(*sliders), 4);
 			}
 
