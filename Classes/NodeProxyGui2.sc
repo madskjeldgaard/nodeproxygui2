@@ -214,6 +214,10 @@ NodeProxyGui2 {
 			});
 			paramViews[key][\text].string_(val);
 		}
+		{ val.isKindOf(Symbol) and: { val.asString[0] == $c or: { val.asString[0] == $a } } } {
+			if(paramViews[key][\type] != \map, { this.makeParameterSection() });
+			paramViews[key][\text].string_(val);
+		}
 		{
 			"% parameter '%' not set".format(this.class, key).warn;
 		}
@@ -361,7 +365,7 @@ NodeProxyGui2 {
 				{ val.isKindOf(Buffer) } {
 					ControlSpec.new(0, Server.default.options.numBuffers - 1, 'lin', 1)
 				}
-				{ val.isKindOf(NodeProxy) } {
+				{ val.isKindOf(NodeProxy) or: { val.isKindOf(Symbol) } } {
 					nil.asSpec
 				}
 				{
@@ -573,6 +577,16 @@ NodeProxyGui2 {
 				.string_(paramVal);
 
 				paramViews.put(key, (type: \proxy, text: staticText));
+
+				layout.add(staticText, 5);
+			}
+
+			{ paramVal.isKindOf(Symbol) } {
+
+				staticText = StaticText.new()
+				.string_(paramVal);
+
+				paramViews.put(key, (type: \map, text: staticText));
 
 				layout.add(staticText, 5);
 			}
