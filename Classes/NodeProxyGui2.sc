@@ -168,6 +168,11 @@ NodeProxyGui2 {
 		{ what == \resume } {
 			play.value_(1)
 		}
+		{ what == \unmap } {
+			nodeProxy.getKeysValues(args).do{ | arr |
+				this.parameterChanged(*arr)
+			}
+		}
 		//{ what == \map } {}
 		//{ what == \unset } {}
 		//{ what == \free } {}
