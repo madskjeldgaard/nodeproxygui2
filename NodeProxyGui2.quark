@@ -1,7 +1,7 @@
 (
   name: "nodeproxygui2",
   summary: "A modern alternative to the NodeProxy gui",
-  version: "1.1.3",
+  version: "1.1.5",
   schelp: "NodeProxyGui2",
   dependencies: [],
   license: "GNU GPL v3.0",
