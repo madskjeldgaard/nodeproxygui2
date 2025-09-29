@@ -40,7 +40,7 @@ ARGUMENT:: collapseArrays
 When CODE::true::, arrays of parameters will be shown as single line LINK::Classes/TextField::s. The default (CODE::false::) will show arrays of parameters as separate silders.
 
 DISCUSSION::
-A non-zero limitUpdateRate will reduce the CPU cost of updating GUI elements. If there are many parameters continuously updated - say from a bunch of noisy sensor readings, a resonable limit is CODE::0.1::. That will force the GUI elements to only redraw ten times per second. CODE::0.1:: is also what the standard LINK::Classes/NdefGui:: uses internally. The limitUpdateRate can also be specified as an argument to the LINK::Classes/NodeProxy#-gui2:: method.
+A non-zero limitUpdateRate will reduce the CPU cost of updating GUI elements. If there are many parameters continuously updated - say from a bunch of noisy sensor readings, a reasonable limit is CODE::0.1::. That will force the GUI elements to only redraw ten times per second. CODE::0.1:: is also what the standard LINK::Classes/NdefGui:: uses internally. The limitUpdateRate can also be specified as an argument to the LINK::Classes/NodeProxy#-gui2:: method.
 
 METHOD:: defaultExcludeParams
 Parameters to be excluded. No GUI widgets will be created for these parameters. Expects an LINK::Classes/Array:: of symbols or strings. Wildcards (*) and Perl Regular Expression Syntax .[{}()\*+?|^$ are supported.
@@ -96,6 +96,26 @@ Closes the window.
 METHOD:: window
 Get the LINK::Classes/Window:: instance.
 
+METHOD:: asCode
+The node with its current settings represented as code. This can be useful for presets / snapshots.
+
+NOTE::
+LINK::#-ignoreParams:: are included while LINK::#-excludeParams:: not.
+::
+
+ARGUMENT:: includeMonitor
+A LINK::Classes/Boolean:: value that specifies whether or not a .play line should be included (assuming the node is playing).
+
+ARGUMENT:: envir
+An optional LINK::Classes/Environment:: like a LINK::Classes/ProxySpace::.
+
+RETURNS:: A LINK::Classes/String:: containing code that recreates the node and its current settings.
+
+METHOD:: document
+Creates a new document with code (using LINK::#-asCode::) that recreates this node with its current settings.
+
+ARGUMENT:: includeMonitor
+A LINK::Classes/Boolean:: value that specifies whether or not a .play line should be included (assuming the node is playing).
 
 EXAMPLES::
 

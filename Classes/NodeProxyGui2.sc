@@ -327,8 +327,8 @@ NodeProxyGui2 {
 				0, { this.defaults() },
 				1, { this.randomize() },
 				2, { this.vary() },
-				3, { nodeProxy.document },
-				4, { nodeProxy.asCode.postln },
+				3, { this.document },
+				4, { this.asCode.postln },
 			)
 		})
 		.keyDownAction_({ | obj, char |
@@ -697,5 +697,36 @@ NodeProxyGui2 {
 				param.asSymbol == key
 			})
 		}
+	}
+
+	asCode { | includeMonitor = false, envir |
+		var nameStr, accessStr = "a", isAnon;
+		var str, position, map, ignored;
+
+		envir = envir ? currentEnvironment;
+
+		nameStr = envir.use { nodeProxy.asCompileString };
+		isAnon = nameStr.beginsWith("a = ");
+		if(isAnon.not, { accessStr = nameStr });
+
+		str = nodeProxy.asCode(false, includeMonitor, envir);
+
+		position = str.findBackwards(");", true);
+		map = ProxyNodeMap();
+		ignored = defaultExcludeParams ++ prExcludeParams;
+
+		nodeProxy.controlKeysValues.pairsDo({ | key, val |
+			if(ignored.includes(key).not, {
+				map.set(key, val)
+			});
+		});
+		prExcludeParams.do{|x| map.removeAt(x)};
+
+		^str.insert(position, map.asCode(accessStr, true))
+	}
+
+	document { | includeMonitor = false |
+		var nameStr = nodeProxy.class.asString ++"_" ++ nodeProxy.key;
+		^this.asCode(includeMonitor).newTextWindow("document-" ++ nameStr)
 	}
 }
