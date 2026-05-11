@@ -15,4 +15,10 @@ embedded in other GUIs. Default is CODE::true::.
 ARGUMENT:: collapseArray
 When CODE::true::, arrays of parameters will be shown as single line LINK::Classes/TextField::s. The default (CODE::false::) will show arrays of parameters as separate silders.
 
+ARGUMENT:: showInfo
+If CODE::false::, the info section (showing fadeTime, channel count and rate) is hidden. Default is CODE::true::.
+
+ARGUMENT:: showTransport
+If CODE::false::, the transport section (play, clear, free, etc...) is hidden. Default is CODE::true::.
+
 RETURNS:: a LINK::Classes/NodeProxyGui2:: instance.

@@ -39,6 +39,12 @@ embedded in other GUIs. Default is CODE::true::.
 ARGUMENT:: collapseArrays
 When CODE::true::, arrays of parameters will be shown as single line LINK::Classes/TextField::s. The default (CODE::false::) will show arrays of parameters as separate silders.
 
+ARGUMENT:: showInfo
+If CODE::false::, the info section (showing fadeTime, channel count and rate) is hidden. When hidden and the node proxy has a key, a plain text header with the key is shown instead. Default is CODE::true::.
+
+ARGUMENT:: showTransport
+If CODE::false::, the transport section (play, clear, free, etc...) is hidden. Default is CODE::true::.
+
 DISCUSSION::
 A non-zero limitUpdateRate will reduce the CPU cost of updating GUI elements. If there are many parameters continuously updated - say from a bunch of noisy sensor readings, a reasonable limit is CODE::0.1::. That will force the GUI elements to only redraw ten times per second. CODE::0.1:: is also what the standard LINK::Classes/NdefGui:: uses internally. The limitUpdateRate can also be specified as an argument to the LINK::Classes/NodeProxy#-gui2:: method.
 
@@ -137,6 +143,18 @@ g.randomize;
 
 // Close the GUI
 g.close();
+
+// Hide the info and transport sections — useful when embedding in a larger GUI
+(
+var win = Window("parameter controls only");
+Ndef(\yiyi, {|freq=300, amp=0.5, pan=0|
+	Pan2.ar(SinOsc.ar(freq), pos: pan, level: amp)
+});
+win.view.layout = VLayout(
+	NodeProxyGui2(Ndef(\yiyi), show: false, showInfo: false, showTransport: false)
+);
+win.front;
+)
 
 // With show = false, the GUI is embeddable in larger views
 (

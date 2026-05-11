@@ -20,11 +20,11 @@ NodeProxyGui2 {
 	var nodeProxyChangedFunc, specChangedFunc;
 
 	// this is a normal constructor method
-	*new { | nodeproxy, limitUpdateRate = 0, show = true, collapseArrays = false |
-		^super.newCopyArgs(nodeproxy, collapseArrays).init(limitUpdateRate, show)
+	*new { | nodeproxy, limitUpdateRate = 0, show = true, collapseArrays = false, showInfo = true, showTransport = true |
+		^super.newCopyArgs(nodeproxy, collapseArrays).init(limitUpdateRate, show, showInfo, showTransport)
 	}
 
-	init { | limitUpdateRate, show |
+	init { | limitUpdateRate, show, showInfo, showTransport |
 
 		this.initFonts();
 
@@ -33,10 +33,21 @@ NodeProxyGui2 {
 
 		window = Window.new(nodeProxy.key);
 		window.layout = VLayout.new(
-			this.makeInfoSection(),
-			this.makeTransportSection(),
 			// parameterSection gets added here in makeParameterSection
 		);
+
+		if (showInfo) {
+			window.layout.add(this.makeInfoSection())
+		} {
+			if (nodeProxy.key.notNil) {
+				header = StaticText.new().string_(nodeProxy.key);
+				window.layout.add(header);
+			}
+		};
+
+		if (showTransport) {
+			window.layout.add(this.makeTransportSection())
+		};
 
 		window.view.children.do{ | c | c.font = if(c == header, headerFont, font) };
 		headerHeight = window.view.sizeHint.height;
