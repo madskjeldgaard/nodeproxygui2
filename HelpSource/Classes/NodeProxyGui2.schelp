@@ -90,6 +90,24 @@ METHOD:: defaults
 Set parameters to LINK::Classes/ControlSpec:: default values. Specs are first looked up in the node proxy's spec, and then in CODE::Spec.specs::.
 NOTE::Parameters listed in either LINK::#-ignoreParams:: or in LINK::#*defaultIgnoreParams:: will be excluded.::
 
+METHOD:: font
+Get or set the LINK::Classes/Font:: used for parameter labels, values, and sliders. Updating this setter rebuilds the parameter section immediately. Consistent with LINK::Classes/JITGui::'s font handling.
+
+METHOD:: headerFont
+Get or set the LINK::Classes/Font:: used for the header (node proxy name).
+
+METHOD:: sliderHeight
+Get or set the fixed height (in pixels) applied to every horizontal slider in the GUI. When code::nil:: (the default), sliders use their natural height from the layout.
+
+METHOD:: sliderWidth
+Get or set the fixed width (in pixels)  applied to every horizontal slider in the GUI. When code::nil:: (the default), sliders stretch freely within their layout column. The vol slider width is not constrained by this setter.
+
+METHOD:: numberBoxWidth
+Get or set the fixed width (in pixels) applied to number boxes in the parameter section. When code::nil:: (the default), number boxes use their natural width from the layout.
+
+METHOD:: labelWidth
+Get or set the fixed width (in pixels) applied to parameter labels (StaticText elements). When code::nil:: (the default), labels use their natural width from the layout.
+
 METHOD:: close
 Closes the window.
 
@@ -137,6 +155,27 @@ g.randomize;
 
 // Close the GUI
 g.close();
+
+// Customise fonts and slider dimensions
+(
+Ndef(\yiyi, {|freq=300, amp=0.5, pan=0|
+	Pan2.ar(SinOsc.ar(freq), pos: pan, level: amp)
+});
+g = Ndef(\yiyi).gui2;
+
+// Set a larger monospace font for parameters
+g.font = Font.monospace(18);
+
+// Set a custom header font
+g.headerFont = Font.sansSerif(28, bold: true);
+
+// Constrain slider dimensions
+g.sliderHeight = 24;
+g.sliderWidth = 180;
+
+// Constrain number box width
+g.numberBoxWidth = 60;
+)
 
 // With show = false, the GUI is embeddable in larger views
 (

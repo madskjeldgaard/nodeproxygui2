@@ -11,11 +11,14 @@ NodeProxyGui2 {
 	var <>ignoreParams;
 	var <window;
 
-	var play, volslider, volvalueBox;
-	var header, parameterSection;
+	var play, volslider, volvalueBox, transportButtons;
+	var header, <parameterSection;
 	var updateInfoFunc;
+	var <contentView;
 
-	var font, headerFont, headerHeight;
+	var <font, <headerFont, <headerHeight;
+	var <paramSectionMaxHeight, <transportButtonMinWidth;
+	var <sliderHeight, <sliderWidth, <numberBoxWidth, <labelWidth;
 
 	var nodeProxyChangedFunc, specChangedFunc;
 
@@ -32,25 +35,47 @@ NodeProxyGui2 {
 		paramViews = IdentityDictionary.new();
 
 		window = Window.new(nodeProxy.key);
-		window.layout = VLayout.new(
-			this.makeInfoSection(),
-			this.makeTransportSection(),
+		contentView = View.new();
+		contentView.layout = VLayout.new(
 			// parameterSection gets added here in makeParameterSection
 		);
+		window.layout = VLayout(contentView).margins_(0);
 
-		window.view.children.do{ | c | c.font = if(c == header, headerFont, font) };
-		headerHeight = window.view.sizeHint.height;
+		contentView.layout.add(this.makeInfoSection());
+		contentView.layout.add(this.makeTransportSection());
+
+		contentView.children.do{ | c | c.font = if(c == header, headerFont, font) };
+		headerHeight = contentView.sizeHint.height;
+		paramSectionMaxHeight = nil;
+		transportButtonMinWidth = 65;
 
 		this.setUpDependencies(limitUpdateRate.max(0));
 
-		this.makeParameterSection();
-
-		if(show) {
-			window.front;
-		}
+		// Defer so the caller has a chance to add contentView to a host
+		// layout before makeParameterSection checks contentView.parent.
+		{
+			this.makeParameterSection();
+			if(show) { window.front };
+		}.defer;
 	}
 
-	asView { ^window.asView }
+	asView { ^contentView }
+
+	// Override the maximum height of the parameter scroll area.
+	// Call this before excludeParams_ when embedding NPG2 inside a
+	// height-constrained host layout. The change takes effect on the
+	// next makeParameterSection call.
+	paramSectionMaxHeight_ { | height |
+		paramSectionMaxHeight = height.asInteger;
+		{ this.makeParameterSection }.defer;
+	}
+
+	// Override the minimum width of all transport buttons (play, clear, free, scope, send).
+	// Can be called after creation; takes effect immediately via stored button references.
+	transportButtonMinWidth_ { | width |
+		transportButtonMinWidth = width.asInteger;
+		{ transportButtons.do(_.minWidth_(transportButtonMinWidth)) }.defer;
+	}
 
 	setUpDependencies { | limitUpdateRate |
 		var limitOrder, limitDict, limitScheduler;
@@ -265,7 +290,7 @@ NodeProxyGui2 {
 	}
 
 	makeTransportSection {
-		var clear, send, scope, free, popup;
+		var proxyButtons, popup;
 
 		play = Button.new()
 		.states_([
@@ -279,39 +304,17 @@ NodeProxyGui2 {
 				nodeProxy.stop
 			})
 		})
-		.value_(nodeProxy.isMonitoring.binaryValue);
+		.value_(nodeProxy.isMonitoring.binaryValue)
+		.minWidth_(transportButtonMinWidth);
 
-		clear = Button.new()
-		.states_(#[
-			["clear"]
-		])
-		.action_({ | obj |
-			nodeProxy.clear
-		});
+		proxyButtons = #[\clear, \free, \scope, \send].collect { |sym|
+			Button.new()
+			.states_([[sym.asString]])
+			.action_({ nodeProxy.perform(sym) })
+			.minWidth_(transportButtonMinWidth)
+		};
 
-		send = Button.new()
-		.states_(#[
-			["send"]
-		])
-		.action_({ | obj |
-			nodeProxy.send
-		});
-
-		scope = Button.new()
-		.states_(#[
-			["scope"]
-		])
-		.action_({ | obj |
-			nodeProxy.scope
-		});
-
-		free = Button.new()
-		.states_(#[
-			["free"]
-		])
-		.action_({ | obj |
-			nodeProxy.free
-		});
+		transportButtons = [play] ++ proxyButtons;
 
 		popup = PopUpMenu.new()
 		.allowsReselection_(true)
@@ -339,15 +342,13 @@ NodeProxyGui2 {
 		.canFocus_(true)
 		.fixedWidth_(25);
 
-		^HLayout.new(
-			play, clear, free, scope, send, popup
-		)
+		^HLayout.new(*([play] ++ proxyButtons ++ [popup]))
 	}
 
 	makeParameterSection {
 		var excluded = defaultExcludeParams ++ prExcludeParams;
 		var numParams = params.flatSize;
-		var sectionSize;
+		var sectionSize, innerView, innerH, windowTargetH;
 
 		params.do{ | spec | spec.removeDependant(specChangedFunc) };
 		params.clear;
@@ -385,17 +386,47 @@ NodeProxyGui2 {
 		};
 
 		if(parameterSection.notNil, { parameterSection.remove });
-		parameterSection = this.makeParameterViews();
-		sectionSize = parameterSection.sizeHint;
-		parameterSection = ScrollView.new().canvas_(parameterSection);
-		window.layout.add(parameterSection, 1);
+		innerView = this.makeParameterViews();
+		sectionSize = innerView.sizeHint;
+		innerH = sectionSize.height;
 
-		if(window.view.parent.isNil, {  //resize only when not embedded
-			window.view.bounds = window.view.bounds.resizeTo(
-				window.view.bounds.width,
-				(sectionSize.height + headerHeight + 30)  //30 compensate default spacing
-				.min(Window.availableBounds.height)
-			);
+		paramSectionMaxHeight.notNil.if({
+			// Pinned path: cap viewport at paramSectionMaxHeight; scroll if needed.
+			// Pin the inner view height BEFORE canvas_() so the canvas does not
+			// collapse to the zero-sized viewport of the freshly created ScrollView.
+			innerView.fixedHeight_(innerH);
+			parameterSection = ScrollView.new().autohidesScrollers_(true).canvas_(innerView);
+			parameterSection.fixedHeight_(innerH.min(paramSectionMaxHeight));
+			contentView.layout.add(parameterSection);
+
+			windowTargetH = headerHeight + innerH.min(paramSectionMaxHeight) + 4;
+			// If embedded, the host controls contentView's height via fixedHeight_.
+			if(contentView.parent.isNil, {
+				contentView.fixedHeight_(windowTargetH);
+				contentView.maxHeight_(windowTargetH);
+			});
+
+			if(window.view.parent.isNil and: { contentView.parent.isNil }, {
+				window.view.bounds = window.view.bounds.resizeTo(
+					window.view.bounds.width,
+					windowTargetH.min(Window.availableBounds.height)
+				);
+			});
+			// Deferred re-pin to counter Qt layout engine sizeHint contamination
+			// across multiple windows created in sequence.
+			if(contentView.parent.isNil, {
+				{
+					innerView.fixedHeight_(innerH);
+					contentView.fixedHeight_(windowTargetH);
+					contentView.maxHeight_(windowTargetH);
+				}.defer(0.07);
+			});
+		}, {
+			// Upstream stretch path: sliders grow to fill available vertical
+			// space. No height pinning anywhere; ScrollView added with stretch
+			// factor 1 so it claims surplus space inside the layout.
+			parameterSection = ScrollView.new().canvas_(innerView);
+			contentView.layout.add(parameterSection, 1);
 		});
 	}
 
@@ -412,6 +443,8 @@ NodeProxyGui2 {
 				nodeProxy.vol_(obj.value);
 				volvalueBox.value_(obj.value);
 			});
+			sliderHeight !? { volslider.fixedHeight_(sliderHeight) };
+			sliderWidth !? { volslider.fixedWidth_(sliderWidth) };
 
 			vollabel = StaticText.new
 			.string_("vol");
@@ -445,12 +478,17 @@ NodeProxyGui2 {
 
 			layout = HLayout.new(
 				if(collapseArrays.not and: { paramVal.isArray and: { paramVal.every(_.isNumber) } }, {
-					[VLayout(*paramVal.collect { | v, n |
-						StaticText.new().string_(key++"["++n++"]")
-					}), s: 1]
+					var labels = paramVal.collect { | v, n |
+						var lbl = StaticText.new().string_(key++"["++n++"]");
+						labelWidth !? { lbl.fixedWidth_(labelWidth) };
+						lbl
+					};
+					[VLayout(*labels), s: 1]
 
 				}, {
-					[StaticText.new().string_(key), s: 1]
+					var lbl = StaticText.new().string_(key);
+					labelWidth !? { lbl.fixedWidth_(labelWidth) };
+					[lbl, s: 1]
 				});
 			);
 
@@ -466,6 +504,8 @@ NodeProxyGui2 {
 					valueBox.value = val;
 					nodeProxy.set(key, val);
 				});
+				sliderHeight !? { slider.fixedHeight_(sliderHeight) };
+				sliderWidth !? { slider.fixedWidth_(sliderWidth) };
 
 				valueBox = NumberBox.new()
 				.action_({ | obj |
@@ -475,6 +515,7 @@ NodeProxyGui2 {
 				})
 				.decimals_(4)
 				.value_(spec.constrain(paramVal));
+				numberBoxWidth !? { valueBox.fixedWidth_(numberBoxWidth) };
 
 				// This is used to be able to fetch the sliders later when they need to be updated
 				paramViews.put(key, (type: \number, slider: slider, numBox: valueBox));
@@ -486,7 +527,7 @@ NodeProxyGui2 {
 			{ collapseArrays.not and: { paramVal.isArray and: { paramVal.every(_.isNumber) } } } {
 
 				sliders = paramVal.collect { |val, n|
-					Slider.new()
+					var sl = Slider.new()
 					.orientation_(\horizontal)
 					.value_(spec.wrapAt(n).unmap(val))
 					.action_({ | obj |
@@ -494,6 +535,9 @@ NodeProxyGui2 {
 						valueBoxes[n].value = val;
 						nodeProxy.seti(key, n, val);
 					});
+					sliderHeight !? { sl.fixedHeight_(sliderHeight) };
+					sliderWidth !? { sl.fixedWidth_(sliderWidth) };
+					sl
 				};
 
 				valueBoxes = paramVal.collect { |pVal, n|
@@ -506,6 +550,7 @@ NodeProxyGui2 {
 					.decimals_(4)
 					.value_(spec.wrapAt(n).constrain(pVal));
 				};
+				numberBoxWidth !? { valueBoxes.do(_.fixedWidth_(numberBoxWidth)) };
 
 				paramViews.put(key, (type: \array, sliders: sliders, numBoxes: valueBoxes));
 				layout.add(VLayout(*valueBoxes.collect{|v| [nil, v, nil]}.flat), 1);
@@ -611,13 +656,39 @@ NodeProxyGui2 {
 	}
 
 	initFonts {
-		var fontSize, headerFontSize;
+		font = font ?? { Font.monospace(14, bold: false, italic: false) };
+		headerFont = headerFont ?? { Font.sansSerif(font.size * 2, bold: true, italic: false) };
+	}
 
-		fontSize = 14;
-		headerFontSize = fontSize * 2;
+	font_ { | aFont |
+		font = aFont;
+		{ contentView.children.do{ | c | if(c != header) { c.font = font } };
+		  this.makeParameterSection() }.defer;
+	}
 
-		headerFont = Font.sansSerif(headerFontSize, bold: true, italic: false);
-		font = Font.monospace(fontSize, bold: false, italic: false);
+	headerFont_ { | aFont |
+		headerFont = aFont;
+		{ if(header.notNil) { header.font = headerFont } }.defer;
+	}
+
+	sliderHeight_ { | height |
+		sliderHeight = height;
+		{ this.makeParameterSection() }.defer;
+	}
+
+	sliderWidth_ { | width |
+		sliderWidth = width;
+		{ this.makeParameterSection() }.defer;
+	}
+
+	numberBoxWidth_ { | width |
+		numberBoxWidth = width;
+		{ this.makeParameterSection() }.defer;
+	}
+
+	labelWidth_ { | width |
+		labelWidth = width;
+		{ this.makeParameterSection() }.defer;
 	}
 
 	randomize { | randmin = 0.0, randmax = 1.0 |
